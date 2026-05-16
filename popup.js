@@ -137,10 +137,12 @@ function renderSiteGroup(containerId, sites, allowDelete = false) {
     )
     .join('');
 
-  container.querySelectorAll('.site-enabled-cb').forEach((cb) => {
-    cb.addEventListener('change', async () => {
-      const id = cb.dataset.id;
-      const site = state.sites.find((s) => s.id === id);
+  container.querySelectorAll('.site-toggle-row').forEach((row) => {
+    row.addEventListener('click', async (e) => {
+      if (e.target.closest('.delete-btn')) return;
+      const cb = row.querySelector('.site-enabled-cb');
+      cb.checked = !cb.checked;
+      const site = state.sites.find((s) => s.id === cb.dataset.id);
       if (site) site.enabled = cb.checked;
       await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
     });
