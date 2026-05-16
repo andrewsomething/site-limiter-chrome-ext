@@ -6,7 +6,7 @@ const {
   patternToRegex,
   registrableDomain,
   matchSite,
-} = require('../lib/utils');
+} = require('../extension/lib/utils');
 
 // ── formatCountdown ───────────────────────────────────────────────────────────
 

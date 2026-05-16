@@ -8,7 +8,7 @@ const {
   resetAll,
   DEFAULT_WATCH_LIMIT_MS,
   DEFAULT_COOLDOWN_MS,
-} = require('../background');
+} = require('../extension/background');
 
 function promisify(fn, ...args) {
   return new Promise((resolve) => fn(...args, resolve));

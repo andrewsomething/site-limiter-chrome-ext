@@ -5,7 +5,7 @@ export default [
     ignores: ['node_modules/**', 'icons/**'],
   },
   {
-    files: ['**/*.js'],
+    files: ['extension/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'script',
@@ -42,7 +42,7 @@ export default [
   },
   {
     // Node.js files that use module.exports
-    files: ['background.js', 'lib/utils.js'],
+    files: ['extension/background.js', 'extension/lib/utils.js'],
     languageOptions: {
       globals: {
         module: 'readonly',

@@ -1,4 +1,4 @@
 node_modules/
-icons/
+extension/icons/
 *.png
 package-lock.json
