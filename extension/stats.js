@@ -13,20 +13,30 @@ Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, L
 
 let allStats = {}; // dailyStats from storage
 let allSites = []; // site list
-let selectedSiteId = 'all';
 let selectedDays = 14;
 
 let timeChart = null;
 let blocksChart = null;
 
+// Indigo palette — one shade per site
+const PALETTE = [
+  '#6366f1',
+  '#818cf8',
+  '#a5b4fc',
+  '#4f46e5',
+  '#c7d2fe',
+  '#7c3aed',
+  '#a78bfa',
+  '#8b5cf6',
+  '#ddd6fe',
+  '#4338ca',
+];
+
 function getChartColors() {
   const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return {
-    accent: '#6366f1',
-    accentSoft: '#818cf8',
     grid: dark ? '#2e2e4a' : '#e2e2ee',
     text: dark ? '#8888aa' : '#64648a',
-    bg: dark ? '#1e1e2e' : '#ffffff',
   };
 }
 
@@ -54,70 +64,73 @@ function labelForDate(dateKey) {
   return `${parseInt(m)}/${parseInt(d)}`;
 }
 
-function getDataForRange(dates) {
-  const watchedMsPerDay = [];
-  const blocksPerDay = [];
+function buildDatasets(dates) {
+  // Only include sites that have any data in range
+  const activeSites = allSites.filter((site) =>
+    dates.some(
+      (date) => allStats[date]?.[site.id]?.watchedMs > 0 || allStats[date]?.[site.id]?.blocks > 0
+    )
+  );
 
-  for (const date of dates) {
-    const dayData = allStats[date] || {};
-    let watchedMs = 0;
-    let blocks = 0;
+  const timeDatasets = activeSites.map((site, i) => ({
+    label: site.name,
+    data: dates.map((date) => Math.round((allStats[date]?.[site.id]?.watchedMs || 0) / 60000)),
+    backgroundColor: PALETTE[i % PALETTE.length] + 'cc',
+    borderColor: PALETTE[i % PALETTE.length],
+    borderWidth: 1,
+    borderRadius: 2,
+  }));
 
-    if (selectedSiteId === 'all') {
-      for (const site of Object.values(dayData)) {
-        watchedMs += site.watchedMs || 0;
-        blocks += site.blocks || 0;
-      }
-    } else {
-      const site = dayData[selectedSiteId] || {};
-      watchedMs = site.watchedMs || 0;
-      blocks = site.blocks || 0;
-    }
+  const blocksDatasets = activeSites.map((site, i) => ({
+    label: site.name,
+    data: dates.map((date) => allStats[date]?.[site.id]?.blocks || 0),
+    backgroundColor: PALETTE[i % PALETTE.length] + 'cc',
+    borderColor: PALETTE[i % PALETTE.length],
+    borderWidth: 1,
+    borderRadius: 2,
+  }));
 
-    watchedMsPerDay.push(watchedMs);
-    blocksPerDay.push(blocks);
-  }
-
-  return { watchedMsPerDay, blocksPerDay };
+  return { timeDatasets, blocksDatasets };
 }
 
-function updateSummary(watchedMsPerDay, blocksPerDay) {
-  const totalMs = watchedMsPerDay.reduce((a, b) => a + b, 0);
-  const totalBlocks = blocksPerDay.reduce((a, b) => a + b, 0);
-  const avgMs = totalMs / selectedDays;
-
+function updateSummary(dates) {
+  let totalMs = 0;
+  let totalBlocks = 0;
+  for (const date of dates) {
+    for (const site of Object.values(allStats[date] || {})) {
+      totalMs += site.watchedMs || 0;
+      totalBlocks += site.blocks || 0;
+    }
+  }
   document.getElementById('sum-time').textContent = formatMinutes(totalMs);
   document.getElementById('sum-blocks').textContent = totalBlocks;
-  document.getElementById('sum-avg').textContent = formatMinutes(avgMs);
+  document.getElementById('sum-avg').textContent = formatMinutes(totalMs / selectedDays);
 }
 
-function makeChartOptions(yLabel, yFormatter) {
+function makeChartOptions(yFormatter) {
   const c = getChartColors();
   return {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: { labels: { color: c.text, font: { size: 11 }, boxWidth: 12, padding: 12 } },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${yFormatter(ctx.raw)}`,
+          label: (ctx) => ` ${ctx.dataset.label}: ${yFormatter(ctx.raw)}`,
         },
       },
     },
     scales: {
       x: {
+        stacked: true,
         grid: { color: c.grid },
         ticks: { color: c.text, font: { size: 11 } },
       },
       y: {
+        stacked: true,
         beginAtZero: true,
         grid: { color: c.grid },
-        ticks: {
-          color: c.text,
-          font: { size: 11 },
-          callback: (v) => yFormatter(v),
-        },
-        title: { display: false },
+        ticks: { color: c.text, font: { size: 11 }, callback: (v) => yFormatter(v) },
       },
     },
   };
@@ -126,78 +139,34 @@ function makeChartOptions(yLabel, yFormatter) {
 function renderCharts() {
   const dates = buildDateRange(selectedDays);
   const labels = dates.map(labelForDate);
-  const { watchedMsPerDay, blocksPerDay } = getDataForRange(dates);
-  const c = getChartColors();
+  const { timeDatasets, blocksDatasets } = buildDatasets(dates);
 
-  updateSummary(watchedMsPerDay, blocksPerDay);
-
-  const timeData = watchedMsPerDay.map((ms) => Math.round(ms / 60000));
+  updateSummary(dates);
 
   if (timeChart) {
     timeChart.data.labels = labels;
-    timeChart.data.datasets[0].data = timeData;
-    timeChart.options = makeChartOptions('Minutes', (v) => `${v}m`);
+    timeChart.data.datasets = timeDatasets;
+    timeChart.options = makeChartOptions((v) => `${v}m`);
     timeChart.update();
   } else {
     timeChart = new Chart(document.getElementById('chart-time'), {
       type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            data: timeData,
-            backgroundColor: c.accent + 'cc',
-            borderColor: c.accent,
-            borderWidth: 1,
-            borderRadius: 4,
-          },
-        ],
-      },
-      options: makeChartOptions('Minutes', (v) => `${v}m`),
+      data: { labels, datasets: timeDatasets },
+      options: makeChartOptions((v) => `${v}m`),
     });
   }
 
   if (blocksChart) {
     blocksChart.data.labels = labels;
-    blocksChart.data.datasets[0].data = blocksPerDay;
-    blocksChart.options = makeChartOptions('Blocks', (v) => v);
+    blocksChart.data.datasets = blocksDatasets;
+    blocksChart.options = makeChartOptions((v) => v);
     blocksChart.update();
   } else {
     blocksChart = new Chart(document.getElementById('chart-blocks'), {
       type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            data: blocksPerDay,
-            backgroundColor: c.accentSoft + 'cc',
-            borderColor: c.accentSoft,
-            borderWidth: 1,
-            borderRadius: 4,
-          },
-        ],
-      },
-      options: makeChartOptions('Blocks', (v) => v),
+      data: { labels, datasets: blocksDatasets },
+      options: makeChartOptions((v) => v),
     });
-  }
-}
-
-function buildSitePills() {
-  const container = document.getElementById('site-pills');
-  const sites = [{ id: 'all', name: 'All Sites' }, ...allSites.filter((s) => s.enabled)];
-
-  container.innerHTML = '';
-  for (const site of sites) {
-    const btn = document.createElement('button');
-    btn.className = 'pill' + (site.id === selectedSiteId ? ' active' : '');
-    btn.textContent = site.name;
-    btn.addEventListener('click', () => {
-      selectedSiteId = site.id;
-      container.querySelectorAll('.pill').forEach((p) => p.classList.remove('active'));
-      btn.classList.add('active');
-      renderCharts();
-    });
-    container.appendChild(btn);
   }
 }
 
@@ -211,8 +180,6 @@ async function init() {
 
   allSites = response.sites || [];
   allStats = statsResponse.dailyStats || {};
-
-  buildSitePills();
 
   document.querySelectorAll('#range-pills .pill').forEach((btn) => {
     btn.addEventListener('click', () => {
