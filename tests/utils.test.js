@@ -4,7 +4,6 @@ const {
   formatCountdown,
   formatWatchTime,
   patternToRegex,
-  registrableDomain,
   matchSite,
 } = require('../extension/lib/utils');
 
@@ -79,6 +78,14 @@ describe('patternToRegex', () => {
     expect(patternToRegex('youtube.com/shorts/*').test('youtube.com/shorts/abc123')).toBe(true);
   });
 
+  test('matches with subdomain prefix', () => {
+    expect(patternToRegex('reddit.com/*').test('old.reddit.com/r/all')).toBe(true);
+  });
+
+  test('matches with www subdomain', () => {
+    expect(patternToRegex('youtube.com/shorts/*').test('www.youtube.com/shorts/abc123')).toBe(true);
+  });
+
   test('is case-insensitive', () => {
     expect(patternToRegex('Reddit.com/*').test('reddit.com/r/all')).toBe(true);
   });
@@ -87,29 +94,17 @@ describe('patternToRegex', () => {
     // "redditXcom/*" should not match "reddit.com/..."
     expect(patternToRegex('reddit.com/*').test('redditXcom/r/all')).toBe(false);
   });
-});
 
-// ── registrableDomain ─────────────────────────────────────────────────────────
-
-describe('registrableDomain', () => {
-  test('strips www subdomain', () => {
-    expect(registrableDomain('www.reddit.com')).toBe('reddit.com');
+  test('matches ccTLD domain (bbc.co.uk)', () => {
+    expect(patternToRegex('bbc.co.uk/*').test('bbc.co.uk/news')).toBe(true);
   });
 
-  test('strips arbitrary subdomain', () => {
-    expect(registrableDomain('old.reddit.com')).toBe('reddit.com');
+  test('matches ccTLD with subdomain', () => {
+    expect(patternToRegex('bbc.co.uk/*').test('news.bbc.co.uk/article')).toBe(true);
   });
 
-  test('leaves two-label domain unchanged', () => {
-    expect(registrableDomain('reddit.com')).toBe('reddit.com');
-  });
-
-  test('strips deep subdomains', () => {
-    expect(registrableDomain('a.b.c.reddit.com')).toBe('reddit.com');
-  });
-
-  test('handles localhost-like single label', () => {
-    expect(registrableDomain('localhost')).toBe('localhost');
+  test('does not match different ccTLD domain', () => {
+    expect(patternToRegex('bbc.co.uk/*').test('notbbc.co.uk/news')).toBe(false);
   });
 });
 
@@ -124,6 +119,7 @@ const SITES = [
   },
   { id: 'reddit', name: 'Reddit', patterns: ['reddit.com/*'], enabled: true },
   { id: 'twitter', name: 'Twitter', patterns: ['twitter.com/*', 'x.com/*'], enabled: true },
+  { id: 'bbc', name: 'BBC', patterns: ['bbc.co.uk/*'], enabled: true },
   { id: 'disabled', name: 'Disabled', patterns: ['disabled.com/*'], enabled: false },
 ];
 
@@ -154,5 +150,13 @@ describe('matchSite', () => {
 
   test('returns null for untracked site', () => {
     expect(matchSite(SITES, 'github.com', '/explore')).toBeNull();
+  });
+
+  test('matches ccTLD site (bbc.co.uk)', () => {
+    expect(matchSite(SITES, 'bbc.co.uk', '/news')?.id).toBe('bbc');
+  });
+
+  test('matches ccTLD site with subdomain', () => {
+    expect(matchSite(SITES, 'news.bbc.co.uk', '/article/123')?.id).toBe('bbc');
   });
 });

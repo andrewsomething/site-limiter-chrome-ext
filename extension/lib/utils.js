@@ -34,22 +34,15 @@ function formatWatchTime(ms) {
 
 /**
  * Convert a site glob pattern to a RegExp matching "hostname + pathname".
- * '*' matches any characters within a single path segment (not '/').
- * e.g. "youtube.com/shorts/*" matches "youtube.com/shorts/abc123"
+ * An optional subdomain prefix is allowed so a pattern like "reddit.com/*"
+ * also matches "old.reddit.com/..." without needing a separate domain-reduction
+ * step. '*' only matches within a single path segment (not '/').
+ * e.g. "youtube.com/shorts/*" matches "www.youtube.com/shorts/abc123"
  */
 function patternToRegex(pattern) {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
-  return new RegExp('^' + escaped, 'i');
-}
-
-/**
- * Reduce a hostname to its registrable domain (last two labels).
- * Strips subdomains so that "old.reddit.com" matches "reddit.com/*".
- * e.g. "old.reddit.com" → "reddit.com", "youtube.com" → "youtube.com"
- */
-function registrableDomain(hostname) {
-  const parts = hostname.split('.');
-  return parts.length > 2 ? parts.slice(-2).join('.') : hostname;
+  // (?:[^.]+\.)* allows zero or more subdomain labels (e.g. "www.", "old.")
+  return new RegExp('^(?:[^.]+\\.)*' + escaped, 'i');
 }
 
 /**
@@ -60,7 +53,7 @@ function registrableDomain(hostname) {
  * @param {string} pathname - e.g. location.pathname
  */
 function matchSite(sites, hostname, pathname) {
-  const url = registrableDomain(hostname) + pathname;
+  const url = hostname + pathname;
   for (const site of sites) {
     if (!site.enabled) {
       continue;
@@ -80,7 +73,6 @@ if (typeof module !== 'undefined') {
     formatCountdown,
     formatWatchTime,
     patternToRegex,
-    registrableDomain,
     matchSite,
   };
 }
