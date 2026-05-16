@@ -1,3 +1,4 @@
 node_modules/
 __tests__/
 extension/lib/chart.umd.min.js
+extension/stats.bundle.js

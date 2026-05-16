@@ -2,7 +2,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
   {
-    ignores: ['node_modules/**', 'extension/icons/**', 'extension/lib/chart.umd.min.js'],
+    ignores: ['node_modules/**', 'extension/icons/**', 'extension/stats.bundle.js'],
   },
   {
     files: ['extension/**/*.js'],
@@ -39,6 +39,13 @@ export default [
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],
       'no-console': 'warn',
+    },
+  },
+  {
+    // stats.js uses ESM imports (bundled by esbuild)
+    files: ['extension/stats.js'],
+    languageOptions: {
+      sourceType: 'module',
     },
   },
   {

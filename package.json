@@ -4,7 +4,7 @@
   "description": "Chrome extension to limit time on distracting sites",
   "private": true,
   "scripts": {
-    "build": "cp node_modules/chart.js/dist/chart.umd.min.js extension/lib/chart.umd.min.js",
+    "build": "esbuild extension/stats.js --bundle --outfile=extension/stats.bundle.js --platform=browser --minify",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -13,6 +13,8 @@
     "prepare": "husky && npm run build"
   },
   "devDependencies": {
+    "chart.js": "^4.5.1",
+    "esbuild": "^0.28.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
     "husky": "^9.0.0",
@@ -31,8 +33,5 @@
       "**/tests/**/*.test.js"
     ],
     "transform": {}
-  },
-  "dependencies": {
-    "chart.js": "^4.5.1"
   }
 }

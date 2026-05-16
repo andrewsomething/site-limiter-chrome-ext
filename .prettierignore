@@ -1,5 +1,5 @@
 node_modules/
 extension/icons/
-extension/lib/chart.umd.min.js
+extension/stats.bundle.js
 *.png
 package-lock.json

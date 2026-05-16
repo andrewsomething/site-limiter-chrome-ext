@@ -1,6 +1,15 @@
-// stats.js — loaded by stats.html
-// Chart is provided by lib/chart.umd.min.js loaded before this script
-/* global Chart */
+// stats.js — loaded by stats.html (bundled with esbuild, includes Chart.js)
+import {
+  Chart,
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 let allStats = {}; // dailyStats from storage
 let allSites = []; // site list
