@@ -60,6 +60,57 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 });
 
+// In-memory stats accumulator — flushed to storage every 10s and on SW suspend.
+// Avoids a storage write on every 1s heartbeat tick.
+const pendingStats = {}; // { [siteId]: { watchedMs: number, blocks: number } }
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function pruneOldStats(dailyStats) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  for (const dateKey of Object.keys(dailyStats)) {
+    if (new Date(dateKey) < cutoff) {
+      delete dailyStats[dateKey];
+    }
+  }
+  return dailyStats;
+}
+
+async function flushStats() {
+  const siteIds = Object.keys(pendingStats);
+  if (siteIds.length === 0) return;
+
+  const snapshot = {};
+  for (const id of siteIds) {
+    snapshot[id] = { ...pendingStats[id] };
+    delete pendingStats[id];
+  }
+
+  const data = await storageGet();
+  const dailyStats = pruneOldStats(data.dailyStats || {});
+  const today = todayKey();
+  if (!dailyStats[today]) dailyStats[today] = {};
+
+  for (const [siteId, delta] of Object.entries(snapshot)) {
+    const existing = dailyStats[today][siteId] || { watchedMs: 0, blocks: 0 };
+    dailyStats[today][siteId] = {
+      watchedMs: existing.watchedMs + delta.watchedMs,
+      blocks: existing.blocks + delta.blocks,
+    };
+  }
+
+  await storageSet({ dailyStats });
+}
+
+setInterval(flushStats, 10_000);
+if (chrome.runtime.onSuspend) {
+  chrome.runtime.onSuspend.addListener(flushStats);
+}
+
 // Per-site promise chain — serializes concurrent heartbeats from multiple tabs
 // so read-modify-write on siteStates is never interleaved for the same siteId.
 const heartbeatQueues = new Map();
@@ -95,6 +146,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       return true;
     case 'RESET_ALL':
       resetAll(sendResponse);
+      return true;
+    case 'GET_STATS':
+      getStats(sendResponse);
       return true;
   }
 });
@@ -134,8 +188,13 @@ async function handleHeartbeat(siteId, sendResponse) {
 
   const newWatchedTime = (state.watchedTime || 0) + 1000;
 
+  // Accumulate watch time in memory — flushed to dailyStats every 10s
+  if (!pendingStats[siteId]) pendingStats[siteId] = { watchedMs: 0, blocks: 0 };
+  pendingStats[siteId].watchedMs += 1000;
+
   if (newWatchedTime >= watchLimit) {
     siteStates[siteId] = { watchedTime: watchLimit, blockStartTime: now };
+    pendingStats[siteId].blocks += 1;
     await storageSet({ siteStates });
     sendResponse({ blocked: true, timeUntilUnblock: cooldownDuration });
   } else {
@@ -204,6 +263,12 @@ async function resetAll(sendResponse) {
   sendResponse({ success: true });
 }
 
+async function getStats(sendResponse) {
+  await flushStats();
+  const data = await storageGet();
+  sendResponse({ dailyStats: data.dailyStats || {} });
+}
+
 // Export for tests — no-op in browser (chrome.storage is not a CommonJS module)
 if (typeof module !== 'undefined') {
   module.exports = {
@@ -213,6 +278,11 @@ if (typeof module !== 'undefined') {
     getState,
     reset,
     resetAll,
+    getStats,
+    flushStats,
+    pruneOldStats,
+    todayKey,
+    pendingStats,
     DEFAULT_WATCH_LIMIT_MS,
     DEFAULT_COOLDOWN_MS,
   };

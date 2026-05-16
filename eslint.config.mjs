@@ -2,7 +2,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
   {
-    ignores: ['node_modules/**', 'icons/**'],
+    ignores: ['node_modules/**', 'extension/icons/**', 'extension/lib/chart.umd.min.js'],
   },
   {
     files: ['extension/**/*.js'],

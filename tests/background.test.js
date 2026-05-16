@@ -6,6 +6,10 @@ const {
   checkStatus,
   reset,
   resetAll,
+  flushStats,
+  pruneOldStats,
+  todayKey,
+  pendingStats,
   DEFAULT_WATCH_LIMIT_MS,
   DEFAULT_COOLDOWN_MS,
 } = require('../extension/background');
@@ -193,5 +197,95 @@ describe('resetAll', () => {
 
     const statusB = await promisify(checkStatus, 'site-b');
     expect(statusB.watchedTime).toBe(0);
+  });
+});
+
+// ── todayKey ──────────────────────────────────────────────────────────────────
+
+describe('todayKey', () => {
+  test('returns a YYYY-MM-DD string', () => {
+    const key = todayKey();
+    expect(key).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  test('matches current local date', () => {
+    const d = new Date();
+    const expected = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    expect(todayKey()).toBe(expected);
+  });
+});
+
+// ── pruneOldStats ─────────────────────────────────────────────────────────────
+
+describe('pruneOldStats', () => {
+  test('removes entries older than 30 days', () => {
+    const old = new Date();
+    old.setDate(old.getDate() - 31);
+    const oldKey = `${old.getFullYear()}-${String(old.getMonth() + 1).padStart(2, '0')}-${String(old.getDate()).padStart(2, '0')}`;
+
+    const stats = {
+      [oldKey]: { site: { watchedMs: 1000, blocks: 1 } },
+      [todayKey()]: { site: { watchedMs: 2000, blocks: 0 } },
+    };
+
+    const result = pruneOldStats(stats);
+    expect(result[oldKey]).toBeUndefined();
+    expect(result[todayKey()]).toBeDefined();
+  });
+
+  test('keeps entries within 30 days', () => {
+    const recent = new Date();
+    recent.setDate(recent.getDate() - 29);
+    const recentKey = `${recent.getFullYear()}-${String(recent.getMonth() + 1).padStart(2, '0')}-${String(recent.getDate()).padStart(2, '0')}`;
+
+    const stats = { [recentKey]: { site: { watchedMs: 1000, blocks: 1 } } };
+    const result = pruneOldStats(stats);
+    expect(result[recentKey]).toBeDefined();
+  });
+});
+
+// ── flushStats ────────────────────────────────────────────────────────────────
+
+describe('flushStats', () => {
+  beforeEach(() => {
+    // Clear pendingStats between tests
+    for (const key of Object.keys(pendingStats)) delete pendingStats[key];
+    chrome.storage.local.set({ dailyStats: {} });
+  });
+
+  test('merges pendingStats into dailyStats in storage', async () => {
+    pendingStats['youtube-shorts'] = { watchedMs: 5000, blocks: 1 };
+    await flushStats();
+
+    const data = await chrome.storage.local.get(null);
+    const today = todayKey();
+    expect(data.dailyStats[today]['youtube-shorts'].watchedMs).toBe(5000);
+    expect(data.dailyStats[today]['youtube-shorts'].blocks).toBe(1);
+  });
+
+  test('accumulates on top of existing dailyStats', async () => {
+    const today = todayKey();
+    chrome.storage.local.set({
+      dailyStats: { [today]: { 'youtube-shorts': { watchedMs: 10000, blocks: 2 } } },
+    });
+
+    pendingStats['youtube-shorts'] = { watchedMs: 3000, blocks: 1 };
+    await flushStats();
+
+    const data = await chrome.storage.local.get(null);
+    expect(data.dailyStats[today]['youtube-shorts'].watchedMs).toBe(13000);
+    expect(data.dailyStats[today]['youtube-shorts'].blocks).toBe(3);
+  });
+
+  test('clears pendingStats after flush', async () => {
+    pendingStats['youtube-shorts'] = { watchedMs: 1000, blocks: 0 };
+    await flushStats();
+    expect(pendingStats['youtube-shorts']).toBeUndefined();
+  });
+
+  test('does nothing when pendingStats is empty', async () => {
+    await flushStats();
+    const data = await chrome.storage.local.get(null);
+    expect(data.dailyStats).toEqual({});
   });
 });
