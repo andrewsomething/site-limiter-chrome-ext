@@ -7,6 +7,15 @@ function sendMessage(msg) {
   return new Promise((resolve) => chrome.runtime.sendMessage(msg, resolve));
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 let state = null; // { sites, siteStates, watchLimit, cooldownDuration }
@@ -75,7 +84,7 @@ function renderStatus() {
       return `
       <div class="site-row">
         <div class="site-header">
-          <span class="site-name">${site.name}</span>
+          <span class="site-name">${escapeHtml(site.name)}</span>
           <div style="display:flex;align-items:center;gap:8px;">
             ${badgeHtml}
             <button class="btn btn-ghost site-reset-btn" data-id="${site.id}" style="padding:2px 8px;font-size:11px;border-radius:99px;">Reset</button>
@@ -129,8 +138,8 @@ function renderSiteGroup(containerId, sites, allowDelete = false) {
         <span class="toggle-slider"></span>
       </label>
       <div style="flex:1;min-width:0;">
-        <div class="site-toggle-name">${site.name}</div>
-        <div class="pattern-hint">${site.patterns.join(', ')}</div>
+        <div class="site-toggle-name">${escapeHtml(site.name)}</div>
+        <div class="pattern-hint">${site.patterns.map(escapeHtml).join(', ')}</div>
       </div>
       ${allowDelete ? `<button class="delete-btn" data-id="${site.id}" title="Remove">✕</button>` : ''}
     </div>`
