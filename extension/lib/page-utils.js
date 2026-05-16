@@ -64,6 +64,9 @@ function renderSiteGroup(containerId, sites, state, allowDelete = false) {
   if (allowDelete) {
     container.querySelectorAll('.delete-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
+        const site = state.sites.find((s) => s.id === btn.dataset.id);
+        if (!site) return;
+        if (!confirm(`Remove "${site.name}"?`)) return;
         state.sites = state.sites.filter((s) => s.id !== btn.dataset.id);
         await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
         renderSites(state);
