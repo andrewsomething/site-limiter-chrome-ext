@@ -33,7 +33,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["icons/*.png", "stats.html"],
+      "resources": ["icons/*.png", "stats.html", "sites.html", "settings.html"],
       "matches": ["<all_urls>"]
     }
   ]

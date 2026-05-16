@@ -30,6 +30,16 @@ export default [
         patternToRegex: 'readonly',
         registrableDomain: 'readonly',
         matchSite: 'readonly',
+        // page-utils.js globals (loaded via script tag before popup/sites/settings)
+        DEFAULT_WATCH_LIMIT_MS: 'readonly',
+        sendMessage: 'readonly',
+        escapeHtml: 'readonly',
+        loadState: 'readonly',
+        renderSites: 'readonly',
+        renderSiteGroup: 'readonly',
+        renderSettings: 'readonly',
+        initAddSite: 'readonly',
+        initSettings: 'readonly',
       },
     },
     rules: {
@@ -57,6 +67,13 @@ export default [
         exports: 'readonly',
         require: 'readonly',
       },
+    },
+  },
+  {
+    // page-utils.js defines globals intentionally consumed by popup/sites/settings via script tag
+    files: ['extension/lib/page-utils.js'],
+    rules: {
+      'no-unused-vars': 'off',
     },
   },
   {

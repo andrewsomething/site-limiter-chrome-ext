@@ -1,0 +1,335 @@
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-soft: #818cf8;
+  --accent-muted: #312e81;
+  --accent-text: #a5b4fc;
+
+  --bg: #f8f9fb;
+  --bg-raised: #ffffff;
+  --bg-input: #f1f3f7;
+  --border: #e2e6ee;
+  --border-input: #d0d5e0;
+
+  --text: #111827;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+  --text-on-accent: #ffffff;
+
+  --ok-bg: #dcfce7;
+  --ok-text: #15803d;
+  --err-bg: #fee2e2;
+  --err-text: #dc2626;
+  --err-muted: #fca5a5;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 2px 12px rgba(99, 102, 241, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --accent-soft: #818cf8;
+    --accent-muted: #1e1b4b;
+    --accent-text: #a5b4fc;
+
+    --bg: #0f1117;
+    --bg-raised: #181b24;
+    --bg-input: #1f2330;
+    --border: #252836;
+    --border-input: #2e3347;
+
+    --text: #f1f5f9;
+    --text-muted: #8b93a8;
+    --text-faint: #4b5263;
+    --text-on-accent: #ffffff;
+
+    --ok-bg: #052e16;
+    --ok-text: #4ade80;
+    --err-bg: #2d0a0a;
+    --err-text: #f87171;
+    --err-muted: #ef4444;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  transition:
+    background 0.15s,
+    opacity 0.15s,
+    box-shadow 0.15s;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+.btn-danger {
+  background: var(--err-bg);
+  color: var(--err-text);
+  border: 1px solid color-mix(in srgb, var(--err-text) 30%, transparent);
+}
+.btn-danger:hover {
+  opacity: 0.85;
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+.btn-secondary:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.btn-ghost {
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border: 1px solid var(--border-input);
+}
+.btn-ghost:hover {
+  background: var(--border);
+}
+
+/* ── Toggle switch ──────────────────────────────────────────────────────────── */
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border-input);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.toggle input:checked + .toggle-slider {
+  background: var(--accent);
+}
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}
+.toggle input:focus-visible + .toggle-slider {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Site toggle rows ───────────────────────────────────────────────────────── */
+.site-toggle-row {
+  display: flex;
+  align-items: center;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  background: var(--bg-raised);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.site-toggle-row:hover {
+  background: var(--bg-input);
+}
+.site-toggle-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+.pattern-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.delete-btn:hover {
+  color: var(--err-text);
+  background: var(--err-bg);
+}
+
+/* ── Section label ──────────────────────────────────────────────────────────── */
+.section-label {
+  padding: 10px 16px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--bg);
+}
+
+/* ── Add-site form ──────────────────────────────────────────────────────────── */
+.add-form {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.add-form label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.add-form input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.add-form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.add-form input::placeholder {
+  color: var(--text-faint);
+}
+
+/* ── Settings form ──────────────────────────────────────────────────────────── */
+.settings-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+.settings-section label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+}
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.input-row input[type='number'] {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  padding: 8px 10px;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.input-row input[type='number']:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.unit {
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.save-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+#save-feedback {
+  color: var(--ok-text);
+  font-size: 12px;
+  display: none;
+  font-weight: 500;
+}
+
+/* ── Full-page shared nav ───────────────────────────────────────────────────── */
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.page-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.page-nav a:hover {
+  color: var(--text);
+  background: var(--bg-input);
+}
+.page-nav a.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}

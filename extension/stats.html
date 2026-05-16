@@ -4,35 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Site Limiter — Stats</title>
+    <link rel="stylesheet" href="shared.css" />
     <style>
-      :root {
-        --accent: #6366f1;
-        --accent-soft: #818cf8;
-        --bg: #f8f8fc;
-        --bg-raised: #ffffff;
-        --bg-input: #f0f0f6;
-        --border: #e2e2ee;
-        --text: #1a1a2e;
-        --text-muted: #64648a;
-        --radius: 12px;
-        --shadow: 0 2px 12px rgba(99, 102, 241, 0.08);
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #13131f;
-          --bg-raised: #1e1e2e;
-          --bg-input: #252538;
-          --border: #2e2e4a;
-          --text: #e8e8f8;
-          --text-muted: #8888aa;
-          --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-        }
-      }
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
       body {
         font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
         background: var(--bg);
@@ -40,25 +13,15 @@
         min-height: 100vh;
         padding: 2rem;
       }
-      header {
+      .page-header {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 2rem;
+        gap: 10px;
+        margin-bottom: 0.25rem;
       }
-      header img {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-      }
-      header h1 {
-        font-size: 1.4rem;
+      .page-header h1 {
+        font-size: 1.5rem;
         font-weight: 700;
-      }
-      header span {
-        color: var(--text-muted);
-        font-size: 1rem;
-        font-weight: 400;
       }
       .controls {
         display: flex;
@@ -100,7 +63,7 @@
       .summary-card {
         background: var(--bg-raised);
         border: 1px solid var(--border);
-        border-radius: var(--radius);
+        border-radius: var(--radius-lg);
         padding: 1rem 1.5rem;
         flex: 1;
         min-width: 140px;
@@ -126,7 +89,7 @@
       .chart-card {
         background: var(--bg-raised);
         border: 1px solid var(--border);
-        border-radius: var(--radius);
+        border-radius: var(--radius-lg);
         padding: 1.5rem;
         box-shadow: var(--shadow);
       }
@@ -151,10 +114,15 @@
     </style>
   </head>
   <body>
-    <header>
-      <img id="header-icon" src="icons/icon48.png" alt="" />
-      <h1>Site Limiter <span>— Usage Stats</span></h1>
-    </header>
+    <div class="page-header">
+      <img src="icons/icon32.png" width="24" height="24" alt="" style="border-radius: 4px" />
+      <h1>Site Limiter</h1>
+    </div>
+    <nav class="page-nav">
+      <a href="sites.html">Sites</a>
+      <a href="settings.html">Settings</a>
+      <a href="stats.html" class="active">Stats</a>
+    </nav>
 
     <div class="controls">
       <div class="pill-group" id="range-pills">

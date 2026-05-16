@@ -1,29 +1,10 @@
-// lib/utils.js loaded via popup.html script tag — provides formatCountdown, formatWatchTime
-// Keep in sync with DEFAULT_WATCH_LIMIT_MS in background.js
-const DEFAULT_WATCH_LIMIT_MS = 15 * 60 * 1000;
-
-// ── Utilities ────────────────────────────────────────────────────────────────
-
-function sendMessage(msg) {
-  return new Promise((resolve) => chrome.runtime.sendMessage(msg, resolve));
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+// lib/utils.js and lib/page-utils.js are loaded before this file via popup.html.
+// They expose: formatCountdown, formatWatchTime, matchSite, sendMessage, escapeHtml,
+//              loadState, renderSites, renderSettings, initAddSite, initSettings
 
 // ── State ────────────────────────────────────────────────────────────────────
 
-let state = null; // { sites, siteStates, watchLimit, cooldownDuration }
-
-async function loadState() {
-  state = await sendMessage({ type: 'GET_STATE' });
-}
+let state = null;
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 
@@ -108,130 +89,6 @@ function renderStatus() {
   });
 }
 
-// ── Sites tab ─────────────────────────────────────────────────────────────────
-
-function renderSites() {
-  const sites = state.sites || [];
-  renderSiteGroup(
-    'default-sites-list',
-    sites.filter((s) => s.isDefault)
-  );
-  renderSiteGroup(
-    'custom-sites-list',
-    sites.filter((s) => !s.isDefault),
-    true
-  );
-}
-
-function renderSiteGroup(containerId, sites, allowDelete = false) {
-  const container = document.getElementById(containerId);
-  if (sites.length === 0) {
-    container.innerHTML =
-      '<div style="padding:8px 16px;color:#444;font-size:12px;">None added yet.</div>';
-    return;
-  }
-  container.innerHTML = sites
-    .map(
-      (site) => `
-    <div class="site-toggle-row" data-id="${site.id}">
-      <label class="toggle">
-        <input type="checkbox" class="site-enabled-cb" data-id="${site.id}" ${site.enabled ? 'checked' : ''} />
-        <span class="toggle-slider"></span>
-      </label>
-      <div style="flex:1;min-width:0;">
-        <div class="site-toggle-name">${escapeHtml(site.name)}</div>
-        <div class="pattern-hint">${site.patterns.map(escapeHtml).join(', ')}</div>
-      </div>
-      ${allowDelete ? `<button class="delete-btn" data-id="${site.id}" title="Remove">✕</button>` : ''}
-    </div>`
-    )
-    .join('');
-
-  container.querySelectorAll('.site-toggle-row').forEach((row) => {
-    row.addEventListener('click', async (e) => {
-      if (e.target.closest('.delete-btn')) return;
-      const cb = row.querySelector('.site-enabled-cb');
-      // If the click originated inside .toggle, the browser already toggled the
-      // checkbox — don't invert it again. For clicks elsewhere on the row (e.g.
-      // the site name), toggle manually to make the whole row clickable.
-      if (!e.target.closest('.toggle')) {
-        cb.checked = !cb.checked;
-      }
-      const site = state.sites.find((s) => s.id === cb.dataset.id);
-      if (site) site.enabled = cb.checked;
-      await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
-    });
-  });
-
-  if (allowDelete) {
-    container.querySelectorAll('.delete-btn').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        state.sites = state.sites.filter((s) => s.id !== btn.dataset.id);
-        await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
-        renderSites();
-      });
-    });
-  }
-}
-
-function initAddSite() {
-  document.getElementById('add-site-btn').addEventListener('click', async () => {
-    const nameEl = document.getElementById('new-site-name');
-    const patternEl = document.getElementById('new-site-pattern');
-    const name = nameEl.value.trim();
-    const pattern = patternEl.value.trim();
-    if (!name) {
-      nameEl.focus();
-      return;
-    }
-    if (!pattern) {
-      patternEl.focus();
-      return;
-    }
-
-    const id = 'custom-' + Date.now();
-    state.sites.push({ id, name, patterns: [pattern], enabled: true, isDefault: false });
-    await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
-    nameEl.value = '';
-    patternEl.value = '';
-    renderSites();
-  });
-}
-
-// ── Settings tab ──────────────────────────────────────────────────────────────
-
-function renderSettings() {
-  const minutes = (state.watchLimit || DEFAULT_WATCH_LIMIT_MS) / (60 * 1000);
-  const hours = (state.cooldownDuration || 3 * 60 * 60 * 1000) / (60 * 60 * 1000);
-  document.getElementById('watch-limit-minutes').value = Math.round(minutes);
-  document.getElementById('cooldown-hours').value = parseFloat(hours.toFixed(2));
-}
-
-function initSettings() {
-  document.getElementById('save-btn').addEventListener('click', async () => {
-    const rawMin = parseFloat(document.getElementById('watch-limit-minutes').value);
-    const rawHrs = parseFloat(document.getElementById('cooldown-hours').value);
-    if (isNaN(rawMin) || rawMin < 1) {
-      document.getElementById('watch-limit-minutes').focus();
-      return;
-    }
-    if (isNaN(rawHrs) || rawHrs <= 0) {
-      document.getElementById('cooldown-hours').focus();
-      return;
-    }
-
-    const watchLimit = Math.round(rawMin * 60 * 1000);
-    const cooldownDuration = Math.round(rawHrs * 60 * 60 * 1000);
-    await sendMessage({ type: 'UPDATE_SETTINGS', settings: { watchLimit, cooldownDuration } });
-    state.watchLimit = watchLimit;
-    state.cooldownDuration = cooldownDuration;
-
-    const feedback = document.getElementById('save-feedback');
-    feedback.style.display = 'inline';
-    setTimeout(() => (feedback.style.display = 'none'), 2000);
-  });
-}
-
 // ── Reset all ─────────────────────────────────────────────────────────────────
 
 function initResetAll() {
@@ -258,18 +115,33 @@ function startPolling() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadState();
+  state = await loadState();
   initTabs();
   renderStatus();
-  renderSites();
-  renderSettings();
-  initAddSite();
-  initSettings();
+  // Popup: enable/disable only — no add/delete (use Sites page for that)
+  renderSiteGroup(
+    'default-sites-list',
+    (state.sites || []).filter((s) => s.isDefault),
+    state
+  );
+  renderSiteGroup(
+    'custom-sites-list',
+    (state.sites || []).filter((s) => !s.isDefault),
+    state,
+    false
+  );
+  renderSettings(state);
+  initSettings(state);
   initResetAll();
   startPolling();
 
-  document.getElementById('stats-link').addEventListener('click', (e) => {
-    e.preventDefault();
+  document.getElementById('stats-link').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') });
+  });
+  document.getElementById('settings-link').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
+  });
+  document.getElementById('manage-sites-link').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('sites.html') });
   });
 });
