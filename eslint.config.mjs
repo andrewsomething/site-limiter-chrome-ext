@@ -14,6 +14,7 @@ export default [
         window: 'readonly',
         document: 'readonly',
         location: 'readonly',
+        history: 'readonly',
         setTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',

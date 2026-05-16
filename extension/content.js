@@ -168,5 +168,18 @@
   window.addEventListener('popstate', handleNavigation);
   window.addEventListener('hashchange', handleNavigation);
 
+  // Intercept history.pushState and replaceState (used by Twitter/X, Instagram,
+  // Reddit, and other SPAs) — these methods fire no native browser events.
+  const _pushState = history.pushState.bind(history);
+  const _replaceState = history.replaceState.bind(history);
+  history.pushState = function (...args) {
+    _pushState(...args);
+    handleNavigation();
+  };
+  history.replaceState = function (...args) {
+    _replaceState(...args);
+    handleNavigation();
+  };
+
   handleNavigation();
 })();
