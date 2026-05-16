@@ -1,4 +1,5 @@
 // lib/utils.js loaded via popup.html script tag — provides formatCountdown, formatWatchTime
+// Keep in sync with DEFAULT_WATCH_LIMIT_MS in background.js
 const DEFAULT_WATCH_LIMIT_MS = 15 * 60 * 1000;
 
 // ── Utilities ────────────────────────────────────────────────────────────────

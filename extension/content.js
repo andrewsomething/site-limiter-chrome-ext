@@ -1,6 +1,6 @@
 (function () {
-  if (window.__shortsLimiterActive) return;
-  window.__shortsLimiterActive = true;
+  if (window.__siteLimiterActive) return;
+  window.__siteLimiterActive = true;
 
   // lib/utils.js is loaded as a content script before this file (see manifest.json)
   // It exposes: formatCountdown, matchSite
@@ -124,7 +124,7 @@
       sendMessage({ type: 'HEARTBEAT', siteId }, (response) => {
         if (response?.blocked) {
           showBlockedOverlay(response.timeUntilUnblock);
-          stopHeartbeat();
+          // stopHeartbeat() is already called inside showBlockedOverlay()
         }
       });
     }, 1000);

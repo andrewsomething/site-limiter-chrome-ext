@@ -108,16 +108,12 @@ function storageSet(items) {
   return chrome.storage.local.set(items);
 }
 
-async function getStorageData() {
-  return storageGet();
-}
-
 function getSiteState(siteStates, siteId) {
   return siteStates[siteId] || { watchedTime: 0, blockStartTime: null };
 }
 
 async function handleHeartbeat(siteId, sendResponse) {
-  const data = await getStorageData();
+  const data = await storageGet();
   const now = Date.now();
   const cooldownDuration = data.cooldownDuration || DEFAULT_COOLDOWN_MS;
   const watchLimit = data.watchLimit || DEFAULT_WATCH_LIMIT_MS;
@@ -150,7 +146,7 @@ async function handleHeartbeat(siteId, sendResponse) {
 }
 
 async function checkStatus(siteId, sendResponse) {
-  const data = await getStorageData();
+  const data = await storageGet();
   const now = Date.now();
   const cooldownDuration = data.cooldownDuration || DEFAULT_COOLDOWN_MS;
   const siteStates = data.siteStates || {};
@@ -171,7 +167,7 @@ async function checkStatus(siteId, sendResponse) {
 }
 
 async function getState(sendResponse) {
-  const data = await getStorageData();
+  const data = await storageGet();
   sendResponse({
     sites: data.sites || DEFAULT_SITES,
     siteStates: data.siteStates || {},
@@ -217,7 +213,7 @@ if (typeof module !== 'undefined') {
     getState,
     reset,
     resetAll,
-    DEFAULT_WATCH_LIMIT_MS: 15 * 60 * 1000,
-    DEFAULT_COOLDOWN_MS: 3 * 60 * 60 * 1000,
+    DEFAULT_WATCH_LIMIT_MS,
+    DEFAULT_COOLDOWN_MS,
   };
 }
