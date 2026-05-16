@@ -1,23 +1,7 @@
+// lib/utils.js loaded via popup.html script tag — provides formatCountdown, formatWatchTime
 const DEFAULT_WATCH_LIMIT_MS = 15 * 60 * 1000;
 
 // ── Utilities ────────────────────────────────────────────────────────────────
-
-function formatCountdown(ms) {
-  const totalSeconds = Math.ceil(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  if (h > 0) return `${h}h ${m}m ${s}s`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-}
-
-function formatWatchTime(ms) {
-  const total = Math.floor(ms / 1000);
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
 
 function sendMessage(msg) {
   return new Promise((resolve) => chrome.runtime.sendMessage(msg, resolve));
@@ -36,8 +20,8 @@ async function loadState() {
 function initTabs() {
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
     });
@@ -48,39 +32,47 @@ function initTabs() {
 
 function renderStatus() {
   const list = document.getElementById('status-list');
-  const enabledSites = (state.sites || []).filter(s => s.enabled);
+  const enabledSites = (state.sites || []).filter((s) => s.enabled);
   const watchLimit = state.watchLimit || DEFAULT_WATCH_LIMIT_MS;
   const limitLabel = formatWatchTime(watchLimit);
 
   if (enabledSites.length === 0) {
-    list.innerHTML = '<div class="empty-status">No sites enabled.<br>Go to the <strong>Sites</strong> tab to enable some.</div>';
+    list.innerHTML =
+      '<div class="empty-status">No sites enabled.<br>Go to the <strong>Sites</strong> tab to enable some.</div>';
     return;
   }
 
-  list.innerHTML = enabledSites.map(site => {
-    const siteState = (state.siteStates || {})[site.id] || { watchedTime: 0, blockStartTime: null };
-    let badgeHtml, timeHtml, progressPct, extraHtml = '';
+  list.innerHTML = enabledSites
+    .map((site) => {
+      const siteState = (state.siteStates || {})[site.id] || {
+        watchedTime: 0,
+        blockStartTime: null,
+      };
+      let badgeHtml,
+        timeHtml,
+        progressPct,
+        extraHtml = '';
 
-    if (siteState.blockStartTime) {
-      const remaining = (state.cooldownDuration || 0) - (Date.now() - siteState.blockStartTime);
-      if (remaining <= 0) {
-        badgeHtml = '<span class="badge ok">Active</span>';
-        timeHtml = `0:00 / ${limitLabel}`;
-        progressPct = 0;
+      if (siteState.blockStartTime) {
+        const remaining = (state.cooldownDuration || 0) - (Date.now() - siteState.blockStartTime);
+        if (remaining <= 0) {
+          badgeHtml = '<span class="badge ok">Active</span>';
+          timeHtml = `0:00 / ${limitLabel}`;
+          progressPct = 0;
+        } else {
+          badgeHtml = '<span class="badge blocked">Blocked</span>';
+          timeHtml = `${limitLabel} / ${limitLabel}`;
+          progressPct = 100;
+          extraHtml = `<div class="cooldown-text">Available in: ${formatCountdown(remaining)}</div>`;
+        }
       } else {
-        badgeHtml = '<span class="badge blocked">Blocked</span>';
-        timeHtml = `${limitLabel} / ${limitLabel}`;
-        progressPct = 100;
-        extraHtml = `<div class="cooldown-text">Available in: ${formatCountdown(remaining)}</div>`;
+        const watched = siteState.watchedTime || 0;
+        badgeHtml = '<span class="badge ok">Active</span>';
+        timeHtml = `${formatWatchTime(watched)} / ${limitLabel}`;
+        progressPct = Math.min(100, (watched / watchLimit) * 100);
       }
-    } else {
-      const watched = siteState.watchedTime || 0;
-      badgeHtml = '<span class="badge ok">Active</span>';
-      timeHtml = `${formatWatchTime(watched)} / ${limitLabel}`;
-      progressPct = Math.min(100, (watched / watchLimit) * 100);
-    }
 
-    return `
+      return `
       <div class="site-row">
         <div class="site-header">
           <span class="site-name">${site.name}</span>
@@ -93,12 +85,14 @@ function renderStatus() {
         <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
         ${extraHtml}
       </div>`;
-  }).join('');
+    })
+    .join('');
 
-  list.querySelectorAll('.site-reset-btn').forEach(btn => {
+  list.querySelectorAll('.site-reset-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
       await sendMessage({ type: 'RESET', siteId: btn.dataset.id });
-      if (state.siteStates) state.siteStates[btn.dataset.id] = { watchedTime: 0, blockStartTime: null };
+      if (state.siteStates)
+        state.siteStates[btn.dataset.id] = { watchedTime: 0, blockStartTime: null };
       renderStatus();
     });
   });
@@ -108,17 +102,27 @@ function renderStatus() {
 
 function renderSites() {
   const sites = state.sites || [];
-  renderSiteGroup('default-sites-list', sites.filter(s => s.isDefault));
-  renderSiteGroup('custom-sites-list', sites.filter(s => !s.isDefault), true);
+  renderSiteGroup(
+    'default-sites-list',
+    sites.filter((s) => s.isDefault)
+  );
+  renderSiteGroup(
+    'custom-sites-list',
+    sites.filter((s) => !s.isDefault),
+    true
+  );
 }
 
 function renderSiteGroup(containerId, sites, allowDelete = false) {
   const container = document.getElementById(containerId);
   if (sites.length === 0) {
-    container.innerHTML = '<div style="padding:8px 16px;color:#444;font-size:12px;">None added yet.</div>';
+    container.innerHTML =
+      '<div style="padding:8px 16px;color:#444;font-size:12px;">None added yet.</div>';
     return;
   }
-  container.innerHTML = sites.map(site => `
+  container.innerHTML = sites
+    .map(
+      (site) => `
     <div class="site-toggle-row" data-id="${site.id}">
       <label class="toggle">
         <input type="checkbox" class="site-enabled-cb" data-id="${site.id}" ${site.enabled ? 'checked' : ''} />
@@ -129,21 +133,23 @@ function renderSiteGroup(containerId, sites, allowDelete = false) {
         <div class="pattern-hint">${site.patterns.join(', ')}</div>
       </div>
       ${allowDelete ? `<button class="delete-btn" data-id="${site.id}" title="Remove">✕</button>` : ''}
-    </div>`).join('');
+    </div>`
+    )
+    .join('');
 
-  container.querySelectorAll('.site-enabled-cb').forEach(cb => {
+  container.querySelectorAll('.site-enabled-cb').forEach((cb) => {
     cb.addEventListener('change', async () => {
       const id = cb.dataset.id;
-      const site = state.sites.find(s => s.id === id);
+      const site = state.sites.find((s) => s.id === id);
       if (site) site.enabled = cb.checked;
       await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
     });
   });
 
   if (allowDelete) {
-    container.querySelectorAll('.delete-btn').forEach(btn => {
+    container.querySelectorAll('.delete-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        state.sites = state.sites.filter(s => s.id !== btn.dataset.id);
+        state.sites = state.sites.filter((s) => s.id !== btn.dataset.id);
         await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
         renderSites();
       });
@@ -157,8 +163,14 @@ function initAddSite() {
     const patternEl = document.getElementById('new-site-pattern');
     const name = nameEl.value.trim();
     const pattern = patternEl.value.trim();
-    if (!name) { nameEl.focus(); return; }
-    if (!pattern) { patternEl.focus(); return; }
+    if (!name) {
+      nameEl.focus();
+      return;
+    }
+    if (!pattern) {
+      patternEl.focus();
+      return;
+    }
 
     const id = 'custom-' + Date.now();
     state.sites.push({ id, name, patterns: [pattern], enabled: true, isDefault: false });
@@ -182,8 +194,14 @@ function initSettings() {
   document.getElementById('save-btn').addEventListener('click', async () => {
     const rawMin = parseFloat(document.getElementById('watch-limit-minutes').value);
     const rawHrs = parseFloat(document.getElementById('cooldown-hours').value);
-    if (isNaN(rawMin) || rawMin < 1) { document.getElementById('watch-limit-minutes').focus(); return; }
-    if (isNaN(rawHrs) || rawHrs <= 0) { document.getElementById('cooldown-hours').focus(); return; }
+    if (isNaN(rawMin) || rawMin < 1) {
+      document.getElementById('watch-limit-minutes').focus();
+      return;
+    }
+    if (isNaN(rawHrs) || rawHrs <= 0) {
+      document.getElementById('cooldown-hours').focus();
+      return;
+    }
 
     const watchLimit = Math.round(rawMin * 60 * 1000);
     const cooldownDuration = Math.round(rawHrs * 60 * 60 * 1000);

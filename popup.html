@@ -1,410 +1,502 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Site Limiter</title>
-  <style>
-    /* ── Design tokens ─────────────────────────────────────────────────────── */
-    :root {
-      --accent:         #6366f1;
-      --accent-hover:   #4f46e5;
-      --accent-muted:   #312e81;
-      --accent-text:    #a5b4fc;
-
-      --bg:             #f8f9fb;
-      --bg-raised:      #ffffff;
-      --bg-input:       #f1f3f7;
-      --border:         #e2e6ee;
-      --border-input:   #d0d5e0;
-
-      --text:           #111827;
-      --text-muted:     #6b7280;
-      --text-faint:     #9ca3af;
-      --text-on-accent: #ffffff;
-
-      --ok-bg:    #dcfce7;
-      --ok-text:  #15803d;
-      --err-bg:   #fee2e2;
-      --err-text: #dc2626;
-      --err-muted:#fca5a5;
-
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
-    }
-
-    @media (prefers-color-scheme: dark) {
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Site Limiter</title>
+    <style>
+      /* ── Design tokens ─────────────────────────────────────────────────────── */
       :root {
-        --accent:         #6366f1;
-        --accent-hover:   #818cf8;
-        --accent-muted:   #1e1b4b;
-        --accent-text:    #a5b4fc;
+        --accent: #6366f1;
+        --accent-hover: #4f46e5;
+        --accent-muted: #312e81;
+        --accent-text: #a5b4fc;
 
-        --bg:             #0f1117;
-        --bg-raised:      #181b24;
-        --bg-input:       #1f2330;
-        --border:         #252836;
-        --border-input:   #2e3347;
+        --bg: #f8f9fb;
+        --bg-raised: #ffffff;
+        --bg-input: #f1f3f7;
+        --border: #e2e6ee;
+        --border-input: #d0d5e0;
 
-        --text:           #f1f5f9;
-        --text-muted:     #8b93a8;
-        --text-faint:     #4b5263;
+        --text: #111827;
+        --text-muted: #6b7280;
+        --text-faint: #9ca3af;
         --text-on-accent: #ffffff;
 
-        --ok-bg:    #052e16;
-        --ok-text:  #4ade80;
-        --err-bg:   #2d0a0a;
-        --err-text: #f87171;
-        --err-muted:#ef4444;
+        --ok-bg: #dcfce7;
+        --ok-text: #15803d;
+        --err-bg: #fee2e2;
+        --err-text: #dc2626;
+        --err-muted: #fca5a5;
 
-        --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
       }
-    }
 
-    /* ── Reset ─────────────────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --accent: #6366f1;
+          --accent-hover: #818cf8;
+          --accent-muted: #1e1b4b;
+          --accent-text: #a5b4fc;
 
-    body {
-      width: 340px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-      font-size: 14px;
-      line-height: 1.5;
-    }
+          --bg: #0f1117;
+          --bg-raised: #181b24;
+          --bg-input: #1f2330;
+          --border: #252836;
+          --border-input: #2e3347;
 
-    /* ── Header ────────────────────────────────────────────────────────────── */
-    header {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 14px 16px 12px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-raised);
-    }
-    header h1 {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: -.01em;
-    }
+          --text: #f1f5f9;
+          --text-muted: #8b93a8;
+          --text-faint: #4b5263;
+          --text-on-accent: #ffffff;
 
-    /* ── Tabs ───────────────────────────────────────────────────────────────── */
-    .tabs {
-      display: flex;
-      background: var(--bg-raised);
-      border-bottom: 1px solid var(--border);
-    }
-    .tab-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 9px 4px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      transition: color .15s, border-color .15s;
-    }
-    .tab-btn:hover { color: var(--text); }
-    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+          --ok-bg: #052e16;
+          --ok-text: #4ade80;
+          --err-bg: #2d0a0a;
+          --err-text: #f87171;
+          --err-muted: #ef4444;
 
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+          --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+      }
 
-    /* ── Status tab ─────────────────────────────────────────────────────────── */
-    .site-row {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-raised);
-    }
-    .site-row:last-child { border-bottom: none; }
-    .site-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 7px;
-    }
-    .site-name { font-size: 13px; font-weight: 600; }
+      /* ── Reset ─────────────────────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    .badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-    }
-    .badge.ok      { background: var(--ok-bg);  color: var(--ok-text); }
-    .badge.blocked { background: var(--err-bg); color: var(--err-text); }
+      body {
+        width: 340px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
-    .time-label { color: var(--text-muted); font-size: 11px; margin-bottom: 6px; }
+      /* ── Header ────────────────────────────────────────────────────────────── */
+      header {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-raised);
+      }
+      header h1 {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
 
-    .progress-track {
-      height: 5px;
-      background: var(--bg-input);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 99px;
-      transition: width .4s ease;
-    }
-    .cooldown-text { color: var(--err-muted); font-size: 11px; margin-top: 6px; }
+      /* ── Tabs ───────────────────────────────────────────────────────────────── */
+      .tabs {
+        display: flex;
+        background: var(--bg-raised);
+        border-bottom: 1px solid var(--border);
+      }
+      .tab-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 9px 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      .tab-btn:hover {
+        color: var(--text);
+      }
+      .tab-btn.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
 
-    .empty-status {
-      padding: 28px 16px;
-      color: var(--text-faint);
-      font-size: 13px;
-      text-align: center;
-      background: var(--bg-raised);
-    }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
 
-    .footer-row {
-      padding: 10px 16px;
-      display: flex;
-      justify-content: flex-end;
-      border-top: 1px solid var(--border);
-      background: var(--bg);
-    }
+      /* ── Status tab ─────────────────────────────────────────────────────────── */
+      .site-row {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-raised);
+      }
+      .site-row:last-child {
+        border-bottom: none;
+      }
+      .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 7px;
+      }
+      .site-name {
+        font-size: 13px;
+        font-weight: 600;
+      }
 
-    /* ── Sites tab ──────────────────────────────────────────────────────────── */
-    .section-label {
-      padding: 10px 16px 5px;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-faint);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      background: var(--bg);
-    }
+      .badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .badge.ok {
+        background: var(--ok-bg);
+        color: var(--ok-text);
+      }
+      .badge.blocked {
+        background: var(--err-bg);
+        color: var(--err-text);
+      }
 
-    .site-toggle-row {
-      display: flex;
-      align-items: center;
-      padding: 9px 16px;
-      border-bottom: 1px solid var(--border);
-      gap: 10px;
-      background: var(--bg-raised);
-      transition: background .15s;
-    }
-    .site-toggle-row:hover { background: var(--bg-input); }
-    .site-toggle-name { font-size: 13px; font-weight: 500; }
-    .pattern-hint { font-size: 11px; color: var(--text-faint); }
+      .time-label {
+        color: var(--text-muted);
+        font-size: 11px;
+        margin-bottom: 6px;
+      }
 
-    .delete-btn {
-      background: none;
-      border: none;
-      color: var(--text-faint);
-      cursor: pointer;
-      font-size: 15px;
-      line-height: 1;
-      padding: 2px 4px;
-      border-radius: var(--radius-sm);
-      transition: color .15s, background .15s;
-    }
-    .delete-btn:hover { color: var(--err-text); background: var(--err-bg); }
+      .progress-track {
+        height: 5px;
+        background: var(--bg-input);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 99px;
+        transition: width 0.4s ease;
+      }
+      .cooldown-text {
+        color: var(--err-muted);
+        font-size: 11px;
+        margin-top: 6px;
+      }
 
-    /* Toggle switch */
-    .toggle {
-      position: relative;
-      width: 36px;
-      height: 20px;
-      flex-shrink: 0;
-    }
-    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-slider {
-      position: absolute;
-      inset: 0;
-      background: var(--border-input);
-      border-radius: 20px;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .toggle-slider::before {
-      content: '';
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      left: 3px;
-      top: 3px;
-      background: #fff;
-      border-radius: 50%;
-      transition: transform .2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,.2);
-    }
-    .toggle input:checked + .toggle-slider { background: var(--accent); }
-    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
-    .toggle input:focus-visible + .toggle-slider {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
+      .empty-status {
+        padding: 28px 16px;
+        color: var(--text-faint);
+        font-size: 13px;
+        text-align: center;
+        background: var(--bg-raised);
+      }
 
-    /* Add custom site form */
-    .add-form {
-      padding: 14px 16px;
-      border-top: 1px solid var(--border);
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .add-form label {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-faint);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-    }
-    .add-form input {
-      width: 100%;
-      background: var(--bg-input);
-      border: 1px solid var(--border-input);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-size: 13px;
-      padding: 7px 10px;
-      outline: none;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .add-form input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
-    }
-    .add-form input::placeholder { color: var(--text-faint); }
+      .footer-row {
+        padding: 10px 16px;
+        display: flex;
+        justify-content: flex-end;
+        border-top: 1px solid var(--border);
+        background: var(--bg);
+      }
 
-    /* Settings tab */
-    .settings-section {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-raised);
-    }
-    .settings-section label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-      margin-bottom: 7px;
-    }
-    .input-row { display: flex; gap: 8px; align-items: center; }
-    .input-row input[type="number"] {
-      flex: 1;
-      background: var(--bg-input);
-      border: 1px solid var(--border-input);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-size: 14px;
-      padding: 8px 10px;
-      outline: none;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .input-row input[type="number"]:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
-    }
-    .unit { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
+      /* ── Sites tab ──────────────────────────────────────────────────────────── */
+      .section-label {
+        padding: 10px 16px 5px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        background: var(--bg);
+      }
 
-    .save-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
-    #save-feedback { color: var(--ok-text); font-size: 12px; display: none; font-weight: 500; }
+      .site-toggle-row {
+        display: flex;
+        align-items: center;
+        padding: 9px 16px;
+        border-bottom: 1px solid var(--border);
+        gap: 10px;
+        background: var(--bg-raised);
+        transition: background 0.15s;
+      }
+      .site-toggle-row:hover {
+        background: var(--bg-input);
+      }
+      .site-toggle-name {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .pattern-hint {
+        font-size: 11px;
+        color: var(--text-faint);
+      }
 
-    /* Buttons */
-    .btn {
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 7px 14px;
-      transition: background .15s, opacity .15s, box-shadow .15s;
-    }
-    .btn:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-    .btn-primary {
-      background: var(--accent);
-      color: var(--text-on-accent);
-    }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-danger {
-      background: var(--err-bg);
-      color: var(--err-text);
-      border: 1px solid color-mix(in srgb, var(--err-text) 30%, transparent);
-    }
-    .btn-danger:hover { opacity: .85; }
-    .btn-ghost {
-      background: var(--bg-input);
-      color: var(--text-muted);
-      border: 1px solid var(--border-input);
-    }
-    .btn-ghost:hover { background: var(--border); }
-  </style>
-</head>
-<body>
-  <header>
-    <img src="icons/icon32.png" width="20" height="20" alt="" style="border-radius:4px;" />
-    <h1>Site Limiter</h1>
-  </header>
+      .delete-btn {
+        background: none;
+        border: none;
+        color: var(--text-faint);
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1;
+        padding: 2px 4px;
+        border-radius: var(--radius-sm);
+        transition:
+          color 0.15s,
+          background 0.15s;
+      }
+      .delete-btn:hover {
+        color: var(--err-text);
+        background: var(--err-bg);
+      }
 
-  <nav class="tabs">
-    <button class="tab-btn active" data-tab="status">Status</button>
-    <button class="tab-btn" data-tab="sites">Sites</button>
-    <button class="tab-btn" data-tab="settings">Settings</button>
-  </nav>
+      /* Toggle switch */
+      .toggle {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+      }
+      .toggle-slider {
+        position: absolute;
+        inset: 0;
+        background: var(--border-input);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        left: 3px;
+        top: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+      .toggle input:checked + .toggle-slider {
+        background: var(--accent);
+      }
+      .toggle input:checked + .toggle-slider::before {
+        transform: translateX(16px);
+      }
+      .toggle input:focus-visible + .toggle-slider {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
 
-  <!-- STATUS TAB -->
-  <div id="tab-status" class="tab-panel active">
-    <div id="status-list"></div>
-    <div class="footer-row">
-      <button id="reset-all-btn" class="btn btn-danger">Reset all</button>
-    </div>
-  </div>
+      /* Add custom site form */
+      .add-form {
+        padding: 14px 16px;
+        border-top: 1px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .add-form label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+      .add-form input {
+        width: 100%;
+        background: var(--bg-input);
+        border: 1px solid var(--border-input);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        font-size: 13px;
+        padding: 7px 10px;
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .add-form input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+      }
+      .add-form input::placeholder {
+        color: var(--text-faint);
+      }
 
-  <!-- SITES TAB -->
-  <div id="tab-sites" class="tab-panel">
-    <div class="section-label">Default sites</div>
-    <div id="default-sites-list"></div>
-    <div class="section-label" style="margin-top:4px;">Custom sites</div>
-    <div id="custom-sites-list"></div>
-    <div class="add-form">
-      <label>Name</label>
-      <input id="new-site-name" type="text" placeholder="e.g. Hacker News" />
-      <label>URL pattern</label>
-      <input id="new-site-pattern" type="text" placeholder="e.g. news.ycombinator.com/*" />
-      <button id="add-site-btn" class="btn btn-primary" style="width:100%">Add site</button>
-    </div>
-  </div>
+      /* Settings tab */
+      .settings-section {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-raised);
+      }
+      .settings-section label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 7px;
+      }
+      .input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .input-row input[type='number'] {
+        flex: 1;
+        background: var(--bg-input);
+        border: 1px solid var(--border-input);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        font-size: 14px;
+        padding: 8px 10px;
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .input-row input[type='number']:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+      }
+      .unit {
+        color: var(--text-muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
 
-  <!-- SETTINGS TAB -->
-  <div id="tab-settings" class="tab-panel">
-    <div class="settings-section">
-      <label for="watch-limit-minutes">Watch limit per session</label>
-      <div class="input-row">
-        <input id="watch-limit-minutes" type="number" min="1" step="1" value="15" />
-        <span class="unit">minutes</span>
+      .save-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      #save-feedback {
+        color: var(--ok-text);
+        font-size: 12px;
+        display: none;
+        font-weight: 500;
+      }
+
+      /* Buttons */
+      .btn {
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 14px;
+        transition:
+          background 0.15s,
+          opacity 0.15s,
+          box-shadow 0.15s;
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--text-on-accent);
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+      .btn-danger {
+        background: var(--err-bg);
+        color: var(--err-text);
+        border: 1px solid color-mix(in srgb, var(--err-text) 30%, transparent);
+      }
+      .btn-danger:hover {
+        opacity: 0.85;
+      }
+      .btn-ghost {
+        background: var(--bg-input);
+        color: var(--text-muted);
+        border: 1px solid var(--border-input);
+      }
+      .btn-ghost:hover {
+        background: var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon32.png" width="20" height="20" alt="" style="border-radius: 4px" />
+      <h1>Site Limiter</h1>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="status">Status</button>
+      <button class="tab-btn" data-tab="sites">Sites</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- STATUS TAB -->
+    <div id="tab-status" class="tab-panel active">
+      <div id="status-list"></div>
+      <div class="footer-row">
+        <button id="reset-all-btn" class="btn btn-danger">Reset all</button>
       </div>
     </div>
-    <div class="settings-section">
-      <label for="cooldown-hours">Cooldown duration after limit is reached</label>
-      <div class="input-row">
-        <input id="cooldown-hours" type="number" min="0.1" step="0.5" value="3" />
-        <span class="unit">hours</span>
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="save-row">
-        <button id="save-btn" class="btn btn-primary">Save</button>
-        <span id="save-feedback">✓ Saved</span>
-      </div>
-    </div>
-  </div>
 
-  <script src="popup.js"></script>
-</body>
+    <!-- SITES TAB -->
+    <div id="tab-sites" class="tab-panel">
+      <div class="section-label">Default sites</div>
+      <div id="default-sites-list"></div>
+      <div class="section-label" style="margin-top: 4px">Custom sites</div>
+      <div id="custom-sites-list"></div>
+      <div class="add-form">
+        <label>Name</label>
+        <input id="new-site-name" type="text" placeholder="e.g. Hacker News" />
+        <label>URL pattern</label>
+        <input id="new-site-pattern" type="text" placeholder="e.g. news.ycombinator.com/*" />
+        <button id="add-site-btn" class="btn btn-primary" style="width: 100%">Add site</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="tab-settings" class="tab-panel">
+      <div class="settings-section">
+        <label for="watch-limit-minutes">Watch limit per session</label>
+        <div class="input-row">
+          <input id="watch-limit-minutes" type="number" min="1" step="1" value="15" />
+          <span class="unit">minutes</span>
+        </div>
+      </div>
+      <div class="settings-section">
+        <label for="cooldown-hours">Cooldown duration after limit is reached</label>
+        <div class="input-row">
+          <input id="cooldown-hours" type="number" min="0.1" step="0.5" value="3" />
+          <span class="unit">hours</span>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="save-row">
+          <button id="save-btn" class="btn btn-primary">Save</button>
+          <span id="save-feedback">✓ Saved</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="lib/utils.js"></script>
+    <script src="popup.js"></script>
+  </body>
 </html>
