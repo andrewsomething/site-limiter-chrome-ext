@@ -74,9 +74,9 @@
     isBlocked = true;
     document.querySelectorAll('video').forEach((v) => v.pause());
 
-    let remaining = timeUntilUnblock;
+    const unblockAt = Date.now() + timeUntilUnblock;
     countdownInterval = setInterval(() => {
-      remaining -= 1000;
+      const remaining = unblockAt - Date.now();
       if (remaining <= 0) {
         clearInterval(countdownInterval);
         countdownInterval = null;
