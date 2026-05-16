@@ -1,2 +1,3 @@
 node_modules/
 __tests__/
+extension/lib/chart.umd.min.js

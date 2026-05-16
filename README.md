@@ -18,21 +18,24 @@ A Chrome extension that limits how long you spend on distracting websites. After
 1. Clone or download this repo
 2. Open `chrome://extensions` in Chrome
 3. Enable **Developer mode** (top right)
-4. Click **Load unpacked** and select the `extension/` subdirectory
+4. Run `npm install && npm run build` to install dependencies and copy vendored assets
+5. Click **Load unpacked** and select the `extension/` subdirectory
 
 ## Usage
 
 Click the extension icon to open the popup:
 
-- **Status tab** — see time used per site and reset individual sites
+- **Status tab** — see time used per site, reset individual sites, and open the Stats page
 - **Sites tab** — enable/disable sites and add custom ones
 - **Settings tab** — configure the watch limit and cooldown duration
+
+The **Stats page** shows 30 days of per-site usage history with time spent and blocks triggered per day.
 
 ## Development
 
 ```bash
-npm install
-npm test        # run unit tests
+npm install       # installs deps and copies vendored assets (via prepare)
+npm test          # run unit tests
 npm run lint    # ESLint
 npm run format  # Prettier
 ```
