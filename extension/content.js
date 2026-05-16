@@ -23,8 +23,6 @@
   );
 
   function showBlockedOverlay(timeUntilUnblock) {
-    stopHeartbeat();
-
     if (overlayEl) {
       const el = overlayEl.querySelector('#sl-countdown');
       if (el) {
@@ -124,7 +122,9 @@
       sendMessage({ type: 'HEARTBEAT', siteId }, (response) => {
         if (response?.blocked) {
           showBlockedOverlay(response.timeUntilUnblock);
-          // stopHeartbeat() is already called inside showBlockedOverlay()
+        } else if (isBlocked) {
+          // Site was reset or cooldown expired — clear the overlay
+          removeOverlay();
         }
       });
     }, 1000);
