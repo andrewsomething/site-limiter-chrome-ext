@@ -11,7 +11,6 @@ A Chrome extension that limits how long you spend on distracting websites. After
 - **Custom sites** — add any site using URL glob patterns (e.g. `reddit.com/*`)
 - **Subdomain matching** — patterns match across subdomains (e.g. `old.reddit.com`)
 - **Per-site reset** — manually reset a site's timer at any time
-- **Settings persist** — configuration survives extension reloads
 - **System theme** — follows your OS light/dark mode preference
 
 ## Installation
