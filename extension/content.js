@@ -1,4 +1,9 @@
 (function () {
+  // On extension reload, the page context persists but the SW restarts.
+  // Clean up the previous injection so we can start fresh.
+  if (typeof window.__siteLimiterCleanup === 'function') {
+    window.__siteLimiterCleanup();
+  }
   if (window.__siteLimiterActive) return;
   window.__siteLimiterActive = true;
 
@@ -12,15 +17,12 @@
   let activeSiteId = null;
 
   // Intercept any video play attempt while blocked
-  document.addEventListener(
-    'play',
-    (e) => {
-      if (isBlocked && e.target.tagName === 'VIDEO') {
-        e.target.pause();
-      }
-    },
-    true
-  );
+  function onPlay(e) {
+    if (isBlocked && e.target.tagName === 'VIDEO') {
+      e.target.pause();
+    }
+  }
+  document.addEventListener('play', onPlay, true);
 
   function showBlockedOverlay(timeUntilUnblock) {
     if (overlayEl) {
@@ -187,7 +189,20 @@
     handleNavigation();
   };
 
+  // Expose cleanup so a subsequent injection (e.g. extension reload) can tear
+  // down this instance before starting fresh.
+  window.__siteLimiterCleanup = function () {
+    stopHeartbeat();
+    removeOverlay();
+    document.removeEventListener('play', onPlay, true);
+    history.pushState = _pushState;
+    history.replaceState = _replaceState;
+    window.removeEventListener('yt-navigate-finish', handleNavigation);
+    window.removeEventListener('popstate', handleNavigation);
+    window.removeEventListener('hashchange', handleNavigation);
+    window.__siteLimiterActive = false;
+    window.__siteLimiterCleanup = null;
+  };
+
   handleNavigation();
-  // Extra deferred check — catches cold SW wake-up and already-loaded tabs
-  setTimeout(handleNavigation, 1000);
 })();

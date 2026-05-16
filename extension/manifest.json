@@ -3,7 +3,7 @@
   "name": "Site Limiter",
   "version": "1.0",
   "description": "Limit time spent on distracting sites. Configurable per-site limits with a cooldown period.",
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "scripting"],
   "host_permissions": ["<all_urls>"],
   "icons": {
     "16":  "icons/icon16.png",

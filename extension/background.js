@@ -58,6 +58,21 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (Object.keys(defaults).length > 0) {
     await storageSet(defaults);
   }
+
+  // Re-inject content scripts into all already-open tabs. Chrome does not
+  // do this automatically when an extension is reloaded or updated.
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) {
+    if (!tab.url || !tab.url.startsWith('http')) continue;
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['lib/utils.js', 'content.js'],
+      });
+    } catch (_) {
+      // Tab may not be injectable (e.g. chrome:// pages) — silently skip
+    }
+  }
 });
 
 // In-memory stats accumulator — flushed to storage every 10s and on SW suspend.

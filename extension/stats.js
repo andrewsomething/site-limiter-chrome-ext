@@ -96,15 +96,21 @@ function buildDatasets(dates) {
 function updateSummary(dates) {
   let totalMs = 0;
   let totalBlocks = 0;
+  let activeDays = 0;
   for (const date of dates) {
-    for (const site of Object.values(allStats[date] || {})) {
-      totalMs += site.watchedMs || 0;
+    const dayData = allStats[date] || {};
+    let dayMs = 0;
+    for (const site of Object.values(dayData)) {
+      dayMs += site.watchedMs || 0;
       totalBlocks += site.blocks || 0;
     }
+    totalMs += dayMs;
+    if (dayMs > 0) activeDays++;
   }
   document.getElementById('sum-time').textContent = formatMinutes(totalMs);
   document.getElementById('sum-blocks').textContent = totalBlocks;
-  document.getElementById('sum-avg').textContent = formatMinutes(totalMs / selectedDays);
+  document.getElementById('sum-avg').textContent =
+    activeDays > 0 ? formatMinutes(totalMs / activeDays) : '—';
 }
 
 function makeChartOptions(yFormatter) {
