@@ -48,13 +48,16 @@ const DEFAULT_SITES = [
   },
 ];
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.set({
-    sites: DEFAULT_SITES,
-    siteStates: {},
-    watchLimit: DEFAULT_WATCH_LIMIT_MS,
-    cooldownDuration: DEFAULT_COOLDOWN_MS,
-  });
+chrome.runtime.onInstalled.addListener(async () => {
+  const data = await storageGet();
+  const defaults = {};
+  if (!data.sites) defaults.sites = DEFAULT_SITES;
+  if (!data.siteStates) defaults.siteStates = {};
+  if (!data.watchLimit) defaults.watchLimit = DEFAULT_WATCH_LIMIT_MS;
+  if (!data.cooldownDuration) defaults.cooldownDuration = DEFAULT_COOLDOWN_MS;
+  if (Object.keys(defaults).length > 0) {
+    await storageSet(defaults);
+  }
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
