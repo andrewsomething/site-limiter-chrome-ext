@@ -138,7 +138,13 @@
   }
 
   function handleNavigation() {
-    sendMessage({ type: 'GET_SITES' }, ({ sites }) => {
+    sendMessage({ type: 'GET_SITES' }, (resp) => {
+      const sites = resp?.sites;
+      if (!sites) {
+        // SW waking up — retry once after a short delay
+        setTimeout(handleNavigation, 500);
+        return;
+      }
       const site = matchSite(sites, location.hostname, location.pathname);
 
       if (!site) {
@@ -182,4 +188,6 @@
   };
 
   handleNavigation();
+  // Extra deferred check — catches cold SW wake-up and already-loaded tabs
+  setTimeout(handleNavigation, 1000);
 })();
