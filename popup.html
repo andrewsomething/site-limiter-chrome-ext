@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Shorts Limiter</title>
+  <title>Site Limiter</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      width: 300px;
+      width: 340px;
       background: #0f0f0f;
       color: #fff;
       font-family: 'Segoe UI', Roboto, Arial, sans-serif;
@@ -22,64 +22,176 @@
       padding: 14px 16px 10px;
       border-bottom: 1px solid #272727;
     }
+    header h1 { font-size: 14px; font-weight: 600; }
 
-    header span { font-size: 20px; }
-    header h1 { font-size: 14px; font-weight: 600; color: #fff; }
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #272727;
+    }
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #888;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 9px 4px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn:hover { color: #ccc; }
+    .tab-btn.active { color: #fff; border-bottom-color: #ff0000; }
 
-    .section { padding: 14px 16px; border-bottom: 1px solid #1a1a1a; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    /* Status badge */
-    .status-row {
+    /* Status tab */
+    .site-row {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .site-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
-
+    .site-name { font-size: 13px; font-weight: 600; }
     .badge {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      padding: 3px 8px;
+      padding: 2px 7px;
       border-radius: 20px;
       text-transform: uppercase;
       letter-spacing: .05em;
     }
-    .badge.ok   { background: #1e3a1e; color: #4caf50; }
+    .badge.ok      { background: #1e3a1e; color: #4caf50; }
     .badge.blocked { background: #3a1e1e; color: #ff5252; }
 
-    .time-label { color: #aaa; font-size: 12px; }
-
-    /* Progress bar */
+    .time-label { color: #888; font-size: 11px; margin-bottom: 5px; }
     .progress-track {
-      height: 6px;
+      height: 4px;
       background: #272727;
-      border-radius: 3px;
+      border-radius: 2px;
       overflow: hidden;
     }
     .progress-fill {
       height: 100%;
       background: #ff0000;
-      border-radius: 3px;
+      border-radius: 2px;
       transition: width .4s ease;
     }
+    .cooldown-text { color: #ff9999; font-size: 11px; margin-top: 5px; }
 
-    .cooldown-info {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #ff9999;
+    .empty-status {
+      padding: 24px 16px;
+      color: #555;
+      font-size: 13px;
       text-align: center;
     }
 
-    /* Settings */
-    label { display: block; font-size: 12px; color: #aaa; margin-bottom: 6px; }
-
-    .input-row {
+    .footer-row {
+      padding: 10px 16px;
       display: flex;
-      gap: 8px;
-      align-items: center;
+      justify-content: flex-end;
+      border-top: 1px solid #1a1a1a;
     }
 
-    input[type="number"] {
+    /* Sites tab */
+    .section-label {
+      padding: 10px 16px 6px;
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .site-toggle-row {
+      display: flex;
+      align-items: center;
+      padding: 9px 16px;
+      border-bottom: 1px solid #1a1a1a;
+      gap: 10px;
+    }
+    .site-toggle-row .site-toggle-name {
+      flex: 1;
+      font-size: 13px;
+    }
+    .site-toggle-row .pattern-hint {
+      font-size: 11px;
+      color: #555;
+    }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #555;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color .15s;
+    }
+    .delete-btn:hover { color: #ff5252; }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 34px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #333;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle input:checked + .toggle-slider { background: #ff0000; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    /* Add custom site form */
+    .add-form {
+      padding: 12px 16px;
+      border-top: 1px solid #272727;
+    }
+    .add-form label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+    .add-form input {
+      width: 100%;
+      background: #1f1f1f;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 13px;
+      padding: 6px 10px;
+      outline: none;
+      margin-bottom: 8px;
+    }
+    .add-form input:focus { border-color: #666; }
+    .add-form input::placeholder { color: #444; }
+
+    /* Settings tab */
+    .settings-section { padding: 14px 16px; border-bottom: 1px solid #1a1a1a; }
+    .settings-section label { display: block; font-size: 12px; color: #aaa; margin-bottom: 6px; }
+    .input-row { display: flex; gap: 8px; align-items: center; }
+    .input-row input[type="number"] {
       flex: 1;
       background: #1f1f1f;
       border: 1px solid #333;
@@ -89,10 +201,13 @@
       padding: 7px 10px;
       outline: none;
     }
-    input[type="number"]:focus { border-color: #666; }
-
+    .input-row input[type="number"]:focus { border-color: #666; }
     .unit { color: #aaa; font-size: 13px; white-space: nowrap; }
 
+    .save-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    #save-feedback { color: #4caf50; font-size: 12px; display: none; }
+
+    /* Shared button styles */
     .btn {
       border: none;
       border-radius: 6px;
@@ -104,65 +219,68 @@
     }
     .btn:hover { opacity: .85; }
     .btn-primary { background: #ff0000; color: #fff; }
-    .btn-ghost   { background: #1f1f1f; color: #aaa; border: 1px solid #333; }
     .btn-danger  { background: #3a1e1e; color: #ff5252; border: 1px solid #5c2a2a; }
-
-    .save-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    #save-feedback { color: #4caf50; font-size: 12px; display: none; }
-
-    footer {
-      padding: 10px 16px;
-      display: flex;
-      justify-content: flex-end;
-    }
+    .btn-ghost   { background: #1f1f1f; color: #aaa; border: 1px solid #333; }
   </style>
 </head>
 <body>
   <header>
     <span>⏱️</span>
-    <h1>YouTube Shorts Limiter</h1>
+    <h1>Site Limiter</h1>
   </header>
 
-  <!-- Status section -->
-  <div class="section">
-    <div class="status-row">
-      <span id="status-badge" class="badge ok">Active</span>
-      <span id="time-label" class="time-label">0:00 / 15:00</span>
-    </div>
-    <div class="progress-track">
-      <div id="progress-fill" class="progress-fill" style="width:0%"></div>
-    </div>
-    <p id="cooldown-info" class="cooldown-info" style="display:none"></p>
-  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="status">Status</button>
+    <button class="tab-btn" data-tab="sites">Sites</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </nav>
 
-  <!-- Settings section -->
-  <div class="section">
-    <label for="watch-limit-minutes">Watch limit per session</label>
-    <div class="input-row">
-      <input id="watch-limit-minutes" type="number" min="1" step="1" value="15" />
-      <span class="unit">minutes</span>
-    </div>
-    <label for="cooldown-hours" style="margin-top:10px;">Cooldown duration after limit is reached</label>
-    <div class="input-row">
-      <input id="cooldown-hours" type="number" min="0.1" step="0.5" value="3" />
-      <span class="unit">hours</span>
-    </div>
-    <div class="save-row">
-      <button id="save-btn" class="btn btn-primary">Save</button>
-      <span id="save-feedback">✓ Saved</span>
+  <!-- STATUS TAB -->
+  <div id="tab-status" class="tab-panel active">
+    <div id="status-list"></div>
+    <div class="footer-row">
+      <button id="reset-all-btn" class="btn btn-danger">Reset all</button>
     </div>
   </div>
 
-  <!-- Reset section -->
-  <footer>
-    <button id="reset-btn" class="btn btn-danger">Reset timer</button>
-  </footer>
+  <!-- SITES TAB -->
+  <div id="tab-sites" class="tab-panel">
+    <div class="section-label">Default sites</div>
+    <div id="default-sites-list"></div>
+    <div class="section-label" style="margin-top:4px;">Custom sites</div>
+    <div id="custom-sites-list"></div>
+    <div class="add-form">
+      <label>Name</label>
+      <input id="new-site-name" type="text" placeholder="e.g. Hacker News" />
+      <label>URL pattern</label>
+      <input id="new-site-pattern" type="text" placeholder="e.g. news.ycombinator.com/*" />
+      <button id="add-site-btn" class="btn btn-primary" style="width:100%">Add site</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" class="tab-panel">
+    <div class="settings-section">
+      <label for="watch-limit-minutes">Watch limit per session</label>
+      <div class="input-row">
+        <input id="watch-limit-minutes" type="number" min="1" step="1" value="15" />
+        <span class="unit">minutes</span>
+      </div>
+    </div>
+    <div class="settings-section">
+      <label for="cooldown-hours">Cooldown duration after limit is reached</label>
+      <div class="input-row">
+        <input id="cooldown-hours" type="number" min="0.1" step="0.5" value="3" />
+        <span class="unit">hours</span>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="save-row">
+        <button id="save-btn" class="btn btn-primary">Save</button>
+        <span id="save-feedback">✓ Saved</span>
+      </div>
+    </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

@@ -1,5 +1,4 @@
 (function () {
-  // Guard against double-injection
   if (window.__shortsLimiterActive) return;
   window.__shortsLimiterActive = true;
 
@@ -7,14 +6,38 @@
   let overlayEl = null;
   let countdownInterval = null;
   let isBlocked = false;
+  let activeSiteId = null;
 
   // Intercept any video play attempt while blocked
   document.addEventListener('play', (e) => {
     if (isBlocked && e.target.tagName === 'VIDEO') e.target.pause();
   }, true);
 
-  function isOnShorts() {
-    return window.location.pathname.startsWith('/shorts/');
+  // Convert a site glob pattern (e.g. "youtube.com/shorts/*") to a RegExp
+  // matching against "hostname + pathname"
+  function patternToRegex(pattern) {
+    const escaped = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '[^/]*');
+    return new RegExp('^' + escaped, 'i');
+  }
+
+  // Reduce any subdomain to the registrable domain (last two labels).
+  // e.g. "old.reddit.com" → "reddit.com", "www.youtube.com" → "youtube.com"
+  function registrableDomain(hostname) {
+    const parts = hostname.split('.');
+    return parts.length > 2 ? parts.slice(-2).join('.') : hostname;
+  }
+
+  function matchSite(sites) {
+    const url = registrableDomain(location.hostname) + location.pathname;
+    for (const site of sites) {
+      if (!site.enabled) continue;
+      for (const pattern of site.patterns) {
+        if (patternToRegex(pattern).test(url)) return site;
+      }
+    }
+    return null;
   }
 
   function formatCountdown(ms) {
@@ -30,7 +53,6 @@
   function showBlockedOverlay(timeUntilUnblock) {
     stopHeartbeat();
 
-    // If overlay already exists, just update the countdown value
     if (overlayEl) {
       const el = overlayEl.querySelector('#sl-countdown');
       if (el) el.textContent = formatCountdown(timeUntilUnblock);
@@ -47,10 +69,10 @@
 
     overlayEl.innerHTML = `
       <div style="text-align:center;max-width:420px;padding:2rem;">
-        <div style="font-size:3.5rem;margin-bottom:1rem">⏱️</div>
-        <h1 style="font-size:1.75rem;font-weight:700;margin:0 0 0.5rem">Shorts limit reached</h1>
+        <div style="font-size:3.5rem;margin-bottom:1rem">&#x23F1;&#xFE0F;</div>
+        <h1 style="font-size:1.75rem;font-weight:700;margin:0 0 0.5rem">Time limit reached</h1>
         <p style="color:#aaa;font-size:1rem;margin:0 0 2rem">
-          You've used up your Shorts watch limit. Time for a break!
+          You've used up your watch limit for this site. Time for a break!
         </p>
         <div style="background:#1f1f1f;border-radius:12px;padding:1.5rem">
           <p style="color:#aaa;font-size:0.85rem;margin:0 0 0.4rem;text-transform:uppercase;letter-spacing:.05em">
@@ -69,7 +91,6 @@
     isBlocked = true;
     document.querySelectorAll('video').forEach(v => v.pause());
 
-    // Tick the on-page countdown independently of heartbeats
     let remaining = timeUntilUnblock;
     countdownInterval = setInterval(() => {
       remaining -= 1000;
@@ -98,15 +119,14 @@
         callback(response);
       });
     } catch (_) {
-      // Extension context invalidated (e.g. after reload) — stop all activity
       stopHeartbeat();
     }
   }
 
-  function startHeartbeat() {
+  function startHeartbeat(siteId) {
     if (heartbeatInterval) return;
     heartbeatInterval = setInterval(() => {
-      sendMessage({ type: 'HEARTBEAT' }, (response) => {
+      sendMessage({ type: 'HEARTBEAT', siteId }, (response) => {
         if (response?.blocked) {
           showBlockedOverlay(response.timeUntilUnblock);
           stopHeartbeat();
@@ -120,25 +140,35 @@
   }
 
   function handleNavigation() {
-    if (!isOnShorts()) {
-      stopHeartbeat();
-      removeOverlay();
-      return;
-    }
+    sendMessage({ type: 'GET_SITES' }, ({ sites }) => {
+      const site = matchSite(sites);
 
-    sendMessage({ type: 'CHECK_STATUS' }, (response) => {
-      if (response?.blocked) {
-        showBlockedOverlay(response.timeUntilUnblock);
-      } else {
+      if (!site) {
+        stopHeartbeat();
         removeOverlay();
-        startHeartbeat();
+        activeSiteId = null;
+        return;
       }
+
+      if (activeSiteId !== site.id) {
+        stopHeartbeat();
+        activeSiteId = site.id;
+      }
+
+      sendMessage({ type: 'CHECK_STATUS', siteId: site.id }, (response) => {
+        if (response?.blocked) {
+          showBlockedOverlay(response.timeUntilUnblock);
+        } else {
+          removeOverlay();
+          startHeartbeat(site.id);
+        }
+      });
     });
   }
 
-  // YouTube fires this on every client-side navigation
   window.addEventListener('yt-navigate-finish', handleNavigation);
+  window.addEventListener('popstate', handleNavigation);
+  window.addEventListener('hashchange', handleNavigation);
 
-  // Handle initial page load
   handleNavigation();
 })();

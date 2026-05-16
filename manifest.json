@@ -1,22 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Shorts Limiter",
+  "name": "Site Limiter",
   "version": "1.0",
-  "description": "Limits YouTube Shorts viewing to 15 minutes, then blocks for a configurable cooldown period.",
+  "description": "Limit time spent on distracting sites. Configurable per-site limits with a cooldown period.",
   "permissions": ["storage"],
-  "host_permissions": ["*://www.youtube.com/*"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["*://www.youtube.com/*"],
+      "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_end"
     }
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "YouTube Shorts Limiter"
+    "default_title": "Site Limiter"
   }
 }
