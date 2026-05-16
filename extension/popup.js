@@ -141,7 +141,12 @@ function renderSiteGroup(containerId, sites, allowDelete = false) {
     row.addEventListener('click', async (e) => {
       if (e.target.closest('.delete-btn')) return;
       const cb = row.querySelector('.site-enabled-cb');
-      cb.checked = !cb.checked;
+      // If the click originated inside .toggle, the browser already toggled the
+      // checkbox — don't invert it again. For clicks elsewhere on the row (e.g.
+      // the site name), toggle manually to make the whole row clickable.
+      if (!e.target.closest('.toggle')) {
+        cb.checked = !cb.checked;
+      }
       const site = state.sites.find((s) => s.id === cb.dataset.id);
       if (site) site.enabled = cb.checked;
       await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
