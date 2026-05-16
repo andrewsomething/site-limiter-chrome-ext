@@ -86,7 +86,7 @@ function renderStatus() {
           <span class="site-name">${site.name}</span>
           <div style="display:flex;align-items:center;gap:8px;">
             ${badgeHtml}
-            <button class="btn btn-ghost site-reset-btn" data-id="${site.id}" style="padding:2px 8px;font-size:11px;">Reset</button>
+            <button class="btn btn-ghost site-reset-btn" data-id="${site.id}" style="padding:2px 8px;font-size:11px;border-radius:99px;">Reset</button>
           </div>
         </div>
         <div class="time-label">${timeHtml}</div>
