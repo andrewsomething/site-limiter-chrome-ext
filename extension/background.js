@@ -60,10 +60,20 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 });
 
+// Per-site promise chain — serializes concurrent heartbeats from multiple tabs
+// so read-modify-write on siteStates is never interleaved for the same siteId.
+const heartbeatQueues = new Map();
+
+function enqueueHeartbeat(siteId, sendResponse) {
+  const prev = heartbeatQueues.get(siteId) ?? Promise.resolve();
+  const next = prev.then(() => handleHeartbeat(siteId, sendResponse)).catch(() => {});
+  heartbeatQueues.set(siteId, next);
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   switch (message.type) {
     case 'HEARTBEAT':
-      handleHeartbeat(message.siteId, sendResponse);
+      enqueueHeartbeat(message.siteId, sendResponse);
       return true;
     case 'CHECK_STATUS':
       checkStatus(message.siteId, sendResponse);
