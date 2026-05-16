@@ -428,6 +428,14 @@
       .btn-danger:hover {
         opacity: 0.85;
       }
+      .btn-secondary {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+      .btn-secondary:hover {
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+      }
       .btn-ghost {
         background: var(--bg-input);
         color: var(--text-muted);
@@ -455,12 +463,7 @@
       <div id="status-list"></div>
       <div class="footer-row">
         <button id="reset-all-btn" class="btn btn-danger">Reset all</button>
-        <a
-          id="stats-link"
-          href="#"
-          style="font-size: 12px; color: var(--accent); text-decoration: none; margin-left: auto"
-          >View Stats →</a
-        >
+        <button id="stats-link" class="btn btn-secondary">View Stats →</button>
       </div>
     </div>
 
