@@ -50,6 +50,8 @@ chrome.runtime.onInstalled.addListener(async () => {
 
   // Sync default sites: add new defaults, remove removed defaults, update
   // names/patterns — while preserving custom sites and enabled state.
+  // If a default that was enabled gets removed, demote it to a custom site
+  // so the user can decide whether to keep tracking it.
   const defaultIds = new Set(DEFAULT_SITES.map((s) => s.id));
   const existing = (data.sites || []).filter((s) => s.isDefault);
   const custom = (data.sites || []).filter((s) => !s.isDefault);
@@ -58,8 +60,10 @@ chrome.runtime.onInstalled.addListener(async () => {
     ...s,
     enabled: s.id in enabledById ? enabledById[s.id] : s.enabled,
   }));
-  // Remove stale defaults (ids no longer in DEFAULT_SITES)
-  const staleRemoved = existing.filter((s) => !defaultIds.has(s.id)).length > 0;
+  const demoted = existing
+    .filter((s) => !defaultIds.has(s.id) && s.enabled)
+    .map((s) => ({ ...s, isDefault: false }));
+  const staleRemoved = existing.some((s) => !defaultIds.has(s.id));
   const changed =
     staleRemoved ||
     !data.sites ||
@@ -70,7 +74,7 @@ chrome.runtime.onInstalled.addListener(async () => {
       );
     });
   if (changed) {
-    defaults.sites = [...mergedDefaults, ...custom];
+    defaults.sites = [...mergedDefaults, ...demoted, ...custom];
   }
 
   if (Object.keys(defaults).length > 0) {
