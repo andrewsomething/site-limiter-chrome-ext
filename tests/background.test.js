@@ -103,6 +103,63 @@ describe('handleHeartbeat', () => {
   });
 });
 
+// ── per-site limit overrides ──────────────────────────────────────────────────
+
+describe('per-site limit overrides', () => {
+  test('uses per-site watchLimit instead of global', async () => {
+    const perSiteLimit = 5 * 60 * 1000; // 5 min
+    chrome.storage.local.set({
+      sites: [
+        {
+          id: 'site-a',
+          name: 'Site A',
+          patterns: ['a.com/*'],
+          enabled: true,
+          watchLimit: perSiteLimit,
+        },
+      ],
+      siteStates: { 'site-a': { watchedTime: perSiteLimit - 1000, blockStartTime: null } },
+      watchLimit: DEFAULT_WATCH_LIMIT_MS, // global is 15min — should be ignored
+      cooldownDuration: DEFAULT_COOLDOWN_MS,
+    });
+    const res = await promisify(handleHeartbeat, 'site-a');
+    expect(res.blocked).toBe(true); // hit per-site limit, not global
+  });
+
+  test('uses global watchLimit when site has no override', async () => {
+    chrome.storage.local.set({
+      sites: [{ id: 'site-a', name: 'Site A', patterns: ['a.com/*'], enabled: true }],
+      siteStates: { 'site-a': { watchedTime: 5 * 60 * 1000 - 1000, blockStartTime: null } },
+      watchLimit: 5 * 60 * 1000, // global is 5min
+      cooldownDuration: DEFAULT_COOLDOWN_MS,
+    });
+    const res = await promisify(handleHeartbeat, 'site-a');
+    expect(res.blocked).toBe(true);
+  });
+
+  test('uses per-site cooldownDuration instead of global', async () => {
+    const perSiteCooldown = 30 * 60 * 1000; // 30 min
+    chrome.storage.local.set({
+      sites: [
+        {
+          id: 'site-a',
+          name: 'Site A',
+          patterns: ['a.com/*'],
+          enabled: true,
+          cooldownDuration: perSiteCooldown,
+        },
+      ],
+      siteStates: { 'site-a': { watchedTime: DEFAULT_WATCH_LIMIT_MS, blockStartTime: Date.now() } },
+      watchLimit: DEFAULT_WATCH_LIMIT_MS,
+      cooldownDuration: DEFAULT_COOLDOWN_MS, // global is 3hr — should be ignored
+    });
+    const res = await promisify(handleHeartbeat, 'site-a');
+    expect(res.blocked).toBe(true);
+    expect(res.timeUntilUnblock).toBeLessThanOrEqual(perSiteCooldown);
+    expect(res.timeUntilUnblock).toBeGreaterThan(perSiteCooldown - 5000);
+  });
+});
+
 // ── checkStatus ───────────────────────────────────────────────────────────────
 
 describe('checkStatus', () => {

@@ -90,6 +90,72 @@ describe('renderSites', () => {
     expect(list.querySelector('.site-enabled-cb').checked).toBe(false);
   });
 
+  test('renders ⚙ limits button for every site', () => {
+    const state = {
+      sites: [
+        { id: 'yt', name: 'YouTube', patterns: ['youtube.com/*'], enabled: true, isDefault: true },
+      ],
+    };
+    renderSites(state);
+    expect(
+      document.getElementById('default-sites-list').querySelector('.limits-btn')
+    ).not.toBeNull();
+  });
+
+  test('clicking ⚙ toggles the limits panel open', () => {
+    const state = {
+      sites: [
+        { id: 'yt', name: 'YouTube', patterns: ['youtube.com/*'], enabled: true, isDefault: true },
+      ],
+    };
+    renderSites(state);
+    const list = document.getElementById('default-sites-list');
+    const btn = list.querySelector('.limits-btn');
+    const panel = list.querySelector('.site-limits-panel');
+    expect(panel.classList.contains('open')).toBe(false);
+    btn.click();
+    expect(panel.classList.contains('open')).toBe(true);
+    btn.click();
+    expect(panel.classList.contains('open')).toBe(false);
+  });
+
+  test('limits panel shows global defaults as placeholders when no per-site override', () => {
+    const state = {
+      watchLimit: 10 * 60 * 1000,
+      cooldownDuration: 2 * 60 * 60 * 1000,
+      sites: [
+        { id: 'yt', name: 'YouTube', patterns: ['youtube.com/*'], enabled: true, isDefault: true },
+      ],
+    };
+    renderSites(state);
+    const list = document.getElementById('default-sites-list');
+    const watchInput = list.querySelector('.limits-watch-min');
+    const cooldownInput = list.querySelector('.limits-cooldown-hr');
+    expect(watchInput.placeholder).toBe('10');
+    expect(cooldownInput.placeholder).toBe('2');
+    expect(watchInput.value).toBe('');
+    expect(cooldownInput.value).toBe('');
+  });
+
+  test('limits panel shows existing per-site values when set', () => {
+    const state = {
+      watchLimit: 15 * 60 * 1000,
+      sites: [
+        {
+          id: 'yt',
+          name: 'YouTube',
+          patterns: ['youtube.com/*'],
+          enabled: true,
+          isDefault: true,
+          watchLimit: 5 * 60 * 1000,
+        },
+      ],
+    };
+    renderSites(state);
+    const list = document.getElementById('default-sites-list');
+    expect(list.querySelector('.limits-watch-min').value).toBe('5');
+  });
+
   test('escapes HTML in site name and pattern', () => {
     const state = {
       sites: [
