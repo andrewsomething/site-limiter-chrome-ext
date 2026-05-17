@@ -80,8 +80,9 @@ function todayKey() {
 function pruneOldStats(dailyStats) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
+  const cutoffKey = cutoff.toISOString().slice(0, 10);
   for (const dateKey of Object.keys(dailyStats)) {
-    if (new Date(dateKey) < cutoff) {
+    if (dateKey < cutoffKey) {
       delete dailyStats[dateKey];
     }
   }
