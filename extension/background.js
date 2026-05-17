@@ -44,10 +44,35 @@ const DEFAULT_SITES = [
 chrome.runtime.onInstalled.addListener(async () => {
   const data = await storageGet();
   const defaults = {};
-  if (!data.sites) defaults.sites = DEFAULT_SITES;
   if (!data.siteStates) defaults.siteStates = {};
   if (!data.watchLimit) defaults.watchLimit = DEFAULT_WATCH_LIMIT_MS;
   if (!data.cooldownDuration) defaults.cooldownDuration = DEFAULT_COOLDOWN_MS;
+
+  // Sync default sites: add new defaults, remove removed defaults, update
+  // names/patterns — while preserving custom sites and enabled state.
+  const defaultIds = new Set(DEFAULT_SITES.map((s) => s.id));
+  const existing = (data.sites || []).filter((s) => s.isDefault);
+  const custom = (data.sites || []).filter((s) => !s.isDefault);
+  const enabledById = Object.fromEntries(existing.map((s) => [s.id, s.enabled]));
+  const mergedDefaults = DEFAULT_SITES.map((s) => ({
+    ...s,
+    enabled: s.id in enabledById ? enabledById[s.id] : s.enabled,
+  }));
+  // Remove stale defaults (ids no longer in DEFAULT_SITES)
+  const staleRemoved = existing.filter((s) => !defaultIds.has(s.id)).length > 0;
+  const changed =
+    staleRemoved ||
+    !data.sites ||
+    mergedDefaults.some((s) => {
+      const old = existing.find((e) => e.id === s.id);
+      return (
+        !old || old.name !== s.name || JSON.stringify(old.patterns) !== JSON.stringify(s.patterns)
+      );
+    });
+  if (changed) {
+    defaults.sites = [...mergedDefaults, ...custom];
+  }
+
   if (Object.keys(defaults).length > 0) {
     await storageSet(defaults);
   }
