@@ -60,13 +60,14 @@ export default [
     },
   },
   {
-    // Node.js files that use module.exports
-    files: ['extension/background.js', 'extension/lib/utils.js'],
+    // Node.js files that export via module.exports for test imports.
+    // NOTE: require is intentionally NOT listed — extension files must not call require().
+    // Tests get require via their own globals block below.
+    files: ['extension/background.js', 'extension/lib/utils.js', 'extension/lib/ui.js'],
     languageOptions: {
       globals: {
         module: 'readonly',
         exports: 'readonly',
-        require: 'readonly',
       },
     },
   },
@@ -89,6 +90,8 @@ export default [
         afterEach: 'readonly',
         jest: 'readonly',
         require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
       },
     },
   },

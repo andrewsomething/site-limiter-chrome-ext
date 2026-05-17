@@ -167,3 +167,18 @@ function initSettings(state) {
     }
   });
 }
+
+// Export for Node.js (tests) — no-op in browser context
+if (typeof module !== 'undefined') {
+  module.exports = {
+    sendMessage,
+    escapeHtml,
+    loadState,
+    onStorageChanged,
+    renderSiteGroup,
+    renderSites,
+    initAddSite,
+    renderSettings,
+    initSettings,
+  };
+}

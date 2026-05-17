@@ -115,25 +115,28 @@ function startPolling() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', async () => {
-  state = await loadState();
-  if (!state) return; // background not ready yet; popup will retry via polling
-  initTabs();
-  renderStatus();
-  // Popup: enable/disable only — add/delete via Sites page
-  renderSites(state);
-  renderSettings(state);
-  initSettings(state);
-  initResetAll();
-  startPolling();
+document.addEventListener(
+  'DOMContentLoaded',
+  async () => {
+    state = await loadState();
+    if (!state) return; // background not ready yet; popup will retry via polling
+    renderStatus();
+    // Popup: enable/disable only — add/delete via Sites page
+    renderSites(state);
+    renderSettings(state);
+    initSettings(state);
+    initResetAll();
+    startPolling();
 
-  document.getElementById('stats-link').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') });
-  });
-  document.getElementById('settings-link').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
-  });
-  document.getElementById('manage-sites-link').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('sites.html') });
-  });
-});
+    document.getElementById('stats-link').addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') });
+    });
+    document.getElementById('settings-link').addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
+    });
+    document.getElementById('manage-sites-link').addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('sites.html') });
+    });
+  },
+  { once: true }
+);
