@@ -303,6 +303,38 @@
   font-weight: 500;
 }
 
+/* ── Pause section ──────────────────────────────────────────────────────────── */
+.pause-section {
+  border-bottom: 1px solid var(--border);
+}
+.pause-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pause-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.pause-desc {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.btn-pause-active {
+  background: color-mix(in srgb, var(--text-muted) 15%, transparent);
+  color: var(--text-muted);
+  border-color: var(--border-input);
+}
+
+/* ── Paused badge ───────────────────────────────────────────────────────────── */
+.badge.paused {
+  background: var(--bg-input);
+  color: var(--text-muted);
+}
+
 /* ── Per-site limits panel ──────────────────────────────────────────────────── */
 .limits-btn {
   background: none;

@@ -24,6 +24,8 @@ const POPUP_HTML = `
   <div id="custom-sites-list"></div>
   <input id="watch-limit-minutes" type="number" />
   <input id="cooldown-hours" type="number" />
+  <button id="pause-btn">⏸</button>
+  <button id="pause-toggle-btn">Pause</button>
   <button id="save-btn">Save</button>
   <button id="reset-all-btn">Reset all</button>
   <button id="stats-link">Stats</button>
@@ -158,4 +160,40 @@ test('clicking a tab button activates that tab panel', async () => {
   expect(sitesBtn.classList.contains('active')).toBe(true);
   expect(document.getElementById('tab-sites').classList.contains('active')).toBe(true);
   expect(document.getElementById('tab-status').classList.contains('active')).toBe(false);
+});
+
+// ── Pause controls ────────────────────────────────────────────────────────────
+
+test('header pause button shows ⏸ when not paused', async () => {
+  chrome.runtime.sendMessage.mockImplementation((_msg, cb) =>
+    cb({ ...DEFAULT_STATE, isPaused: false })
+  );
+  await triggerInit();
+  expect(document.getElementById('pause-btn').textContent).toBe('⏸');
+});
+
+test('header pause button shows ▶ when paused', async () => {
+  chrome.runtime.sendMessage.mockImplementation((_msg, cb) =>
+    cb({ ...DEFAULT_STATE, isPaused: true })
+  );
+  await triggerInit();
+  expect(document.getElementById('pause-btn').textContent).toBe('▶');
+});
+
+test('status tab shows Paused badge when isPaused', async () => {
+  chrome.runtime.sendMessage.mockImplementation((_msg, cb) =>
+    cb({ ...DEFAULT_STATE, isPaused: true })
+  );
+  await triggerInit();
+  expect(document.querySelector('.badge.paused')).not.toBeNull();
+  expect(document.querySelector('.badge.ok')).toBeNull();
+});
+
+test('status tab shows Active badge when not paused', async () => {
+  chrome.runtime.sendMessage.mockImplementation((_msg, cb) =>
+    cb({ ...DEFAULT_STATE, isPaused: false })
+  );
+  await triggerInit();
+  expect(document.querySelector('.badge.ok')).not.toBeNull();
+  expect(document.querySelector('.badge.paused')).toBeNull();
 });

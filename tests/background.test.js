@@ -4,6 +4,8 @@ const {
   getSiteState,
   handleHeartbeat,
   checkStatus,
+  getState,
+  togglePause,
   reset,
   resetAll,
   flushStats,
@@ -344,5 +346,48 @@ describe('flushStats', () => {
     await flushStats();
     const data = await chrome.storage.local.get(null);
     expect(data.dailyStats).toEqual({});
+  });
+});
+
+// ── pause ─────────────────────────────────────────────────────────────────────
+
+describe('pause', () => {
+  test('heartbeat does not increment time when isPaused', async () => {
+    chrome.storage.local.set({
+      siteStates: {},
+      watchLimit: DEFAULT_WATCH_LIMIT_MS,
+      cooldownDuration: DEFAULT_COOLDOWN_MS,
+      isPaused: true,
+    });
+    const res = await promisify(handleHeartbeat, 'site-a');
+    expect(res.paused).toBe(true);
+    expect(res.blocked).toBe(false);
+    const data = await chrome.storage.local.get(null);
+    expect((data.siteStates || {})['site-a']).toBeUndefined();
+  });
+
+  test('togglePause sets isPaused to true when currently false', async () => {
+    const res = await promisify(togglePause);
+    expect(res.isPaused).toBe(true);
+    const data = await chrome.storage.local.get(null);
+    expect(data.isPaused).toBe(true);
+  });
+
+  test('togglePause sets isPaused to false when currently true', async () => {
+    chrome.storage.local.set({ isPaused: true });
+    const res = await promisify(togglePause);
+    expect(res.isPaused).toBe(false);
+  });
+
+  test('heartbeat resumes normally when unpaused', async () => {
+    chrome.storage.local.set({
+      siteStates: {},
+      watchLimit: DEFAULT_WATCH_LIMIT_MS,
+      cooldownDuration: DEFAULT_COOLDOWN_MS,
+      isPaused: false,
+    });
+    const res = await promisify(handleHeartbeat, 'site-a');
+    expect(res.paused).toBeUndefined();
+    expect(res.watchedTime).toBe(1000);
   });
 });

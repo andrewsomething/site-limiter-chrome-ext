@@ -49,7 +49,12 @@ function renderStatus() {
         progressPct,
         extraHtml = '';
 
-      if (siteState.blockStartTime) {
+      if (state.isPaused && !siteState.blockStartTime) {
+        badgeHtml = '<span class="badge paused">Paused</span>';
+        const watched = siteState.watchedTime || 0;
+        timeHtml = `${formatWatchTime(watched)} / ${limitLabel}`;
+        progressPct = Math.min(100, watchLimit > 0 ? (watched / watchLimit) * 100 : 0);
+      } else if (siteState.blockStartTime) {
         const remaining = cooldownDuration - (Date.now() - siteState.blockStartTime);
         if (remaining <= 0) {
           badgeHtml = '<span class="badge ok">Active</span>';
@@ -94,6 +99,34 @@ function renderStatus() {
   });
 }
 
+// ── Pause control ─────────────────────────────────────────────────────────────
+
+function renderPauseControls() {
+  const headerBtn = document.getElementById('pause-btn');
+  const toggleBtn = document.getElementById('pause-toggle-btn');
+  const paused = state.isPaused;
+
+  if (headerBtn) {
+    headerBtn.textContent = paused ? '▶' : '⏸';
+    headerBtn.title = paused ? 'Resume tracking' : 'Pause tracking';
+  }
+  if (toggleBtn) {
+    toggleBtn.textContent = paused ? 'Resume' : 'Pause';
+    toggleBtn.classList.toggle('btn-pause-active', paused);
+  }
+}
+
+function initPauseControls() {
+  async function toggle() {
+    const res = await sendMessage({ type: 'TOGGLE_PAUSE' });
+    if (res) state.isPaused = res.isPaused;
+    renderPauseControls();
+    renderStatus();
+  }
+  document.getElementById('pause-btn')?.addEventListener('click', toggle);
+  document.getElementById('pause-toggle-btn')?.addEventListener('click', toggle);
+}
+
 // ── Reset all ─────────────────────────────────────────────────────────────────
 
 function initResetAll() {
@@ -113,7 +146,9 @@ function startPolling() {
     state.siteStates = fresh.siteStates;
     state.watchLimit = fresh.watchLimit;
     state.cooldownDuration = fresh.cooldownDuration;
+    state.isPaused = fresh.isPaused;
     renderStatus();
+    renderPauseControls();
   }, 1000);
 }
 
@@ -126,10 +161,12 @@ document.addEventListener(
     if (!state) return; // background not ready yet; popup will retry via polling
     initTabs();
     renderStatus();
+    renderPauseControls();
     // Popup: enable/disable only — add/delete via Sites page
     renderSites(state);
     renderSettings(state);
     initSettings(state);
+    initPauseControls();
     initResetAll();
     startPolling();
 

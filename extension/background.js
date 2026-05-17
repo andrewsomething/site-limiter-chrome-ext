@@ -189,6 +189,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'GET_STATS':
       getStats(sendResponse);
       return true;
+    case 'TOGGLE_PAUSE':
+      togglePause(sendResponse);
+      return true;
   }
 });
 
@@ -208,6 +211,13 @@ function getSiteState(siteStates, siteId) {
 async function handleHeartbeat(siteId, sendResponse) {
   const data = await storageGet();
   const now = Date.now();
+
+  // If tracking is paused, skip time accumulation entirely
+  if (data.isPaused) {
+    sendResponse({ blocked: false, paused: true });
+    return;
+  }
+
   const sites = data.sites || DEFAULT_SITES;
   const site = sites.find((s) => s.id === siteId);
   const cooldownDuration =
@@ -277,7 +287,15 @@ async function getState(sendResponse) {
     siteStates: data.siteStates || {},
     watchLimit: data.watchLimit || DEFAULT_WATCH_LIMIT_MS,
     cooldownDuration: data.cooldownDuration || DEFAULT_COOLDOWN_MS,
+    isPaused: data.isPaused || false,
   });
+}
+
+async function togglePause(sendResponse) {
+  const data = await storageGet();
+  const isPaused = !data.isPaused;
+  await storageSet({ isPaused });
+  sendResponse({ isPaused });
 }
 
 async function getSites(sendResponse) {
@@ -321,6 +339,7 @@ if (typeof module !== 'undefined') {
     handleHeartbeat,
     checkStatus,
     getState,
+    togglePause,
     reset,
     resetAll,
     getStats,
