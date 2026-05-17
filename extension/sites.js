@@ -7,7 +7,9 @@ async function init() {
 }
 
 onStorageChanged(['sites', 'siteStates'], async () => {
-  state = await loadState();
+  const fresh = await loadState();
+  if (!fresh) return;
+  state = fresh;
   renderSites(state);
 });
 

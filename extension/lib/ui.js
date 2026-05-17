@@ -88,6 +88,7 @@ function renderSiteGroup(containerId, sites, state, allowDelete = false) {
 }
 
 function renderSites(state) {
+  if (!state) return;
   const sites = state.sites || [];
   renderSiteGroup(
     'default-sites-list',
@@ -130,6 +131,7 @@ function initAddSite(state) {
 // ── Settings rendering ────────────────────────────────────────────────────────
 
 function renderSettings(state) {
+  if (!state) return;
   const minutes = (state.watchLimit || DEFAULT_WATCH_LIMIT_MS) / (60 * 1000);
   const hours = (state.cooldownDuration || DEFAULT_COOLDOWN_MS) / (60 * 60 * 1000);
   const wlEl = document.getElementById('watch-limit-minutes');
