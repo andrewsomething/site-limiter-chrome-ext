@@ -108,6 +108,7 @@ function renderPauseControls() {
 
   if (headerBtn) {
     headerBtn.textContent = paused ? '▶' : '⏸';
+    headerBtn.style.fontSize = paused ? '20px' : '28px';
     headerBtn.title = paused ? 'Resume tracking' : 'Pause tracking';
   }
   if (toggleBtn) {
