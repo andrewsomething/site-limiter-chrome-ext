@@ -18,18 +18,18 @@ let selectedDays = 7;
 let timeChart = null;
 let blocksChart = null;
 
-// Indigo palette — one shade per site
+// Cool-spectrum palette — spread across blue → teal → indigo → violet → pink
 const PALETTE = [
-  '#6366f1',
-  '#818cf8',
-  '#a5b4fc',
-  '#4f46e5',
-  '#c7d2fe',
-  '#7c3aed',
-  '#a78bfa',
-  '#8b5cf6',
-  '#ddd6fe',
-  '#4338ca',
+  '#6366f1', // indigo
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#06b6d4', // cyan
+  '#a855f7', // purple
+  '#14b8a6', // teal
+  '#60a5fa', // sky
+  '#d946ef', // fuchsia
+  '#34d399', // emerald
+  '#f472b6', // pink
 ];
 
 function getChartColors() {
