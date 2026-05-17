@@ -142,24 +142,6 @@ function makeChartOptions(yFormatter) {
   };
 }
 
-function updateOrCreateChart(chart, id, datasets, labels, yFormatter) {
-  const canvas = document.getElementById(id);
-  if (chart) {
-    chart.data.labels = labels;
-    chart.data.datasets = datasets;
-    chart.options = makeChartOptions(yFormatter);
-    chart.update();
-    return chart;
-  }
-  // Destroy any stale chart on the canvas (e.g. after page reload)
-  Chart.getChart(canvas)?.destroy();
-  return new Chart(canvas, {
-    type: 'bar',
-    data: { labels, datasets },
-    options: makeChartOptions(yFormatter),
-  });
-}
-
 function renderCharts() {
   const dates = buildDateRange(selectedDays);
   const labels = dates.map(labelForDate);
@@ -167,8 +149,19 @@ function renderCharts() {
 
   updateSummary(dates);
 
-  timeChart = updateOrCreateChart(timeChart, 'chart-time', timeDatasets, labels, (v) => `${v}m`);
-  blocksChart = updateOrCreateChart(blocksChart, 'chart-blocks', blocksDatasets, labels, (v) => v);
+  timeChart?.destroy();
+  blocksChart?.destroy();
+
+  timeChart = new Chart(document.getElementById('chart-time'), {
+    type: 'bar',
+    data: { labels, datasets: timeDatasets },
+    options: makeChartOptions((v) => `${v}m`),
+  });
+  blocksChart = new Chart(document.getElementById('chart-blocks'), {
+    type: 'bar',
+    data: { labels, datasets: blocksDatasets },
+    options: makeChartOptions((v) => v),
+  });
 }
 
 async function init() {
