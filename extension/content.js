@@ -121,7 +121,10 @@
     if (heartbeatInterval) {
       return;
     }
+    // Don't accumulate time while the tab is in the background
+    if (document.hidden) return;
     heartbeatInterval = setInterval(() => {
+      if (document.hidden) return; // skip tick if tab lost focus mid-interval
       sendMessage({ type: 'HEARTBEAT', siteId }, (response) => {
         if (response?.blocked) {
           showBlockedOverlay(response.timeUntilUnblock);
@@ -177,6 +180,16 @@
   window.addEventListener('popstate', handleNavigation);
   window.addEventListener('hashchange', handleNavigation);
 
+  // Pause tracking when tab is hidden (backgrounded/minimised); resume on focus
+  function onVisibilityChange() {
+    if (document.hidden) {
+      stopHeartbeat();
+    } else if (activeSiteId && !isBlocked) {
+      startHeartbeat(activeSiteId);
+    }
+  }
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
   // Intercept history.pushState and replaceState (used by Twitter/X, Instagram,
   // Reddit, and other SPAs) — these methods fire no native browser events.
   const _pushState = history.pushState.bind(history);
@@ -196,6 +209,7 @@
     stopHeartbeat();
     removeOverlay();
     document.removeEventListener('play', onPlay, true);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     history.pushState = _pushState;
     history.replaceState = _replaceState;
     window.removeEventListener('yt-navigate-finish', handleNavigation);
