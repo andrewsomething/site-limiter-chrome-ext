@@ -391,3 +391,37 @@ describe('pause', () => {
     expect(res.watchedTime).toBe(1000);
   });
 });
+
+// ── pause + cooldown retention ────────────────────────────────────────────────
+
+describe('pause cooldown retention', () => {
+  test('checkStatus returns paused:true and not blocked when isPaused', async () => {
+    chrome.storage.local.set({
+      siteStates: { 'site-a': { watchedTime: DEFAULT_WATCH_LIMIT_MS, blockStartTime: Date.now() } },
+      watchLimit: DEFAULT_WATCH_LIMIT_MS,
+      cooldownDuration: DEFAULT_COOLDOWN_MS,
+      isPaused: true,
+    });
+    const res = await promisify(checkStatus, 'site-a');
+    expect(res.blocked).toBe(false);
+    expect(res.paused).toBe(true);
+  });
+
+  test('resuming shifts blockStartTime forward to preserve remaining cooldown', async () => {
+    const blockStartTime = Date.now() - 30 * 60 * 1000; // blocked 30min ago
+    chrome.storage.local.set({
+      siteStates: { 'site-a': { watchedTime: DEFAULT_WATCH_LIMIT_MS, blockStartTime } },
+      watchLimit: DEFAULT_WATCH_LIMIT_MS,
+      cooldownDuration: DEFAULT_COOLDOWN_MS,
+      isPaused: true,
+      pausedAt: Date.now() - 10 * 60 * 1000, // paused 10min ago
+    });
+    await promisify(togglePause); // resume
+    const data = await chrome.storage.local.get(null);
+    // blockStartTime should be shifted ~10min forward
+    const newBlockStart = data.siteStates['site-a'].blockStartTime;
+    expect(newBlockStart).toBeGreaterThan(blockStartTime + 9 * 60 * 1000);
+    expect(data.isPaused).toBe(false);
+    expect(data.pausedAt).toBeNull();
+  });
+});

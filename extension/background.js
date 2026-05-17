@@ -259,6 +259,15 @@ async function handleHeartbeat(siteId, sendResponse) {
 async function checkStatus(siteId, sendResponse) {
   const data = await storageGet();
   const now = Date.now();
+
+  // While paused, suppress blocking so the overlay hides
+  if (data.isPaused) {
+    const siteStates = data.siteStates || {};
+    const state = getSiteState(siteStates, siteId);
+    sendResponse({ blocked: false, paused: true, watchedTime: state.watchedTime || 0 });
+    return;
+  }
+
   const sites = data.sites || DEFAULT_SITES;
   const site = sites.find((s) => s.id === siteId);
   const cooldownDuration =
@@ -294,7 +303,30 @@ async function getState(sendResponse) {
 async function togglePause(sendResponse) {
   const data = await storageGet();
   const isPaused = !data.isPaused;
-  await storageSet({ isPaused });
+
+  if (isPaused) {
+    // Record when we paused so we can offset cooldown timers on resume
+    await storageSet({ isPaused, pausedAt: Date.now() });
+  } else {
+    // On resume, shift all active blockStartTimes forward by the pause duration
+    // so the remaining cooldown is preserved exactly
+    const pauseMs = data.pausedAt ? Date.now() - data.pausedAt : 0;
+    if (pauseMs > 0) {
+      const siteStates = data.siteStates || {};
+      for (const id of Object.keys(siteStates)) {
+        if (siteStates[id].blockStartTime) {
+          siteStates[id] = {
+            ...siteStates[id],
+            blockStartTime: siteStates[id].blockStartTime + pauseMs,
+          };
+        }
+      }
+      await storageSet({ isPaused, pausedAt: null, siteStates });
+    } else {
+      await storageSet({ isPaused, pausedAt: null });
+    }
+  }
+
   sendResponse({ isPaused });
 }
 
