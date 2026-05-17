@@ -13,7 +13,7 @@ Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, L
 
 let allStats = {}; // dailyStats from storage
 let allSites = []; // site list
-let selectedDays = 14;
+let selectedDays = 7;
 
 let timeChart = null;
 let blocksChart = null;
