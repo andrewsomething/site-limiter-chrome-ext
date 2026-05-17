@@ -142,6 +142,21 @@ function makeChartOptions(yFormatter) {
   };
 }
 
+function updateOrCreateChart(chart, id, datasets, labels, yFormatter) {
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets = datasets;
+    chart.options = makeChartOptions(yFormatter);
+    chart.update();
+    return chart;
+  }
+  return new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: makeChartOptions(yFormatter),
+  });
+}
+
 function renderCharts() {
   const dates = buildDateRange(selectedDays);
   const labels = dates.map(labelForDate);
@@ -149,31 +164,8 @@ function renderCharts() {
 
   updateSummary(dates);
 
-  if (timeChart) {
-    timeChart.data.labels = labels;
-    timeChart.data.datasets = timeDatasets;
-    timeChart.options = makeChartOptions((v) => `${v}m`);
-    timeChart.update();
-  } else {
-    timeChart = new Chart(document.getElementById('chart-time'), {
-      type: 'bar',
-      data: { labels, datasets: timeDatasets },
-      options: makeChartOptions((v) => `${v}m`),
-    });
-  }
-
-  if (blocksChart) {
-    blocksChart.data.labels = labels;
-    blocksChart.data.datasets = blocksDatasets;
-    blocksChart.options = makeChartOptions((v) => v);
-    blocksChart.update();
-  } else {
-    blocksChart = new Chart(document.getElementById('chart-blocks'), {
-      type: 'bar',
-      data: { labels, datasets: blocksDatasets },
-      options: makeChartOptions((v) => v),
-    });
-  }
+  timeChart = updateOrCreateChart(timeChart, 'chart-time', timeDatasets, labels, (v) => `${v}m`);
+  blocksChart = updateOrCreateChart(blocksChart, 'chart-blocks', blocksDatasets, labels, (v) => v);
 }
 
 async function init() {

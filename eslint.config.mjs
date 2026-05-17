@@ -28,11 +28,10 @@ export default [
         // Shared utility globals (lib/utils.js loaded via script tag before content/popup)
         formatCountdown: 'readonly',
         formatWatchTime: 'readonly',
-        patternToRegex: 'readonly',
-        registrableDomain: 'readonly',
         matchSite: 'readonly',
-        // page-utils.js globals (loaded via script tag before popup/sites/settings)
         DEFAULT_WATCH_LIMIT_MS: 'readonly',
+        DEFAULT_COOLDOWN_MS: 'readonly',
+        // lib/ui.js globals (loaded via script tag before popup/sites/settings)
         sendMessage: 'readonly',
         escapeHtml: 'readonly',
         loadState: 'readonly',
@@ -41,6 +40,7 @@ export default [
         renderSettings: 'readonly',
         initAddSite: 'readonly',
         initSettings: 'readonly',
+        onStorageChanged: 'readonly',
       },
     },
     rules: {
@@ -71,8 +71,8 @@ export default [
     },
   },
   {
-    // page-utils.js defines globals intentionally consumed by popup/sites/settings via script tag
-    files: ['extension/lib/page-utils.js'],
+    // lib/ui.js defines globals intentionally consumed by popup/sites/settings via script tag
+    files: ['extension/lib/ui.js'],
     rules: {
       'no-unused-vars': 'off',
     },

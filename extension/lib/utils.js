@@ -1,7 +1,10 @@
 /**
- * Pure utility functions shared between content.js, popup.js, and tests.
- * No chrome.* or DOM dependencies.
+ * Pure utility functions and shared constants.
+ * No chrome.* or DOM dependencies — safe to use in content.js, background.js, and tests.
  */
+
+const DEFAULT_WATCH_LIMIT_MS = 15 * 60 * 1000;
+const DEFAULT_COOLDOWN_MS = 3 * 60 * 60 * 1000;
 
 /**
  * Format milliseconds as a human-readable countdown string.
@@ -67,9 +70,11 @@ function matchSite(sites, hostname, pathname) {
   return null;
 }
 
-// Export for Node.js (tests) — no-op in browser context
+// Export for Node.js (tests and background.js) — no-op in browser context
 if (typeof module !== 'undefined') {
   module.exports = {
+    DEFAULT_WATCH_LIMIT_MS,
+    DEFAULT_COOLDOWN_MS,
     formatCountdown,
     formatWatchTime,
     patternToRegex,

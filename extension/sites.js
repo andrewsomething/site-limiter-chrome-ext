@@ -6,13 +6,9 @@ async function init() {
   initAddSite(state);
 }
 
-chrome.storage.onChanged.addListener((changes) => {
-  if ('sites' in changes || 'siteStates' in changes) {
-    loadState().then((fresh) => {
-      state = fresh;
-      renderSites(state);
-    });
-  }
+onStorageChanged(['sites', 'siteStates'], async () => {
+  state = await loadState();
+  renderSites(state);
 });
 
 document.addEventListener('DOMContentLoaded', init);

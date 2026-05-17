@@ -1,6 +1,7 @@
-// lib/utils.js and lib/page-utils.js are loaded before this file via popup.html.
-// They expose: formatCountdown, formatWatchTime, matchSite, sendMessage, escapeHtml,
-//              loadState, renderSites, renderSettings, initAddSite, initSettings
+// lib/utils.js and lib/ui.js are loaded before this file via popup.html.
+// They expose: formatCountdown, formatWatchTime, matchSite, DEFAULT_WATCH_LIMIT_MS,
+//              DEFAULT_COOLDOWN_MS, sendMessage, escapeHtml, loadState, renderSites,
+//              renderSettings, initAddSite, initSettings, onStorageChanged
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ function renderStatus() {
         const watched = siteState.watchedTime || 0;
         badgeHtml = '<span class="badge ok">Active</span>';
         timeHtml = `${formatWatchTime(watched)} / ${limitLabel}`;
-        progressPct = Math.min(100, (watched / watchLimit) * 100);
+        progressPct = Math.min(100, watchLimit > 0 ? (watched / watchLimit) * 100 : 0);
       }
 
       return `
@@ -118,18 +119,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   state = await loadState();
   initTabs();
   renderStatus();
-  // Popup: enable/disable only — no add/delete (use Sites page for that)
-  renderSiteGroup(
-    'default-sites-list',
-    (state.sites || []).filter((s) => s.isDefault),
-    state
-  );
-  renderSiteGroup(
-    'custom-sites-list',
-    (state.sites || []).filter((s) => !s.isDefault),
-    state,
-    false
-  );
+  // Popup: enable/disable only — add/delete via Sites page
+  renderSites(state);
   renderSettings(state);
   initSettings(state);
   initResetAll();

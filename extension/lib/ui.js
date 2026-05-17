@@ -1,8 +1,8 @@
-// Shared utilities for popup, sites, and settings pages.
-// lib/utils.js must be loaded before this file — it exposes formatCountdown, formatWatchTime, matchSite.
+// Shared UI utilities for popup, sites, and settings pages.
+// lib/utils.js must be loaded before this file — it exposes:
+//   formatCountdown, formatWatchTime, matchSite, DEFAULT_WATCH_LIMIT_MS, DEFAULT_COOLDOWN_MS
 
-// Keep in sync with DEFAULT_WATCH_LIMIT_MS in background.js
-const DEFAULT_WATCH_LIMIT_MS = 15 * 60 * 1000;
+// ── Messaging ─────────────────────────────────────────────────────────────────
 
 function sendMessage(msg) {
   return new Promise((resolve) => chrome.runtime.sendMessage(msg, resolve));
@@ -19,6 +19,18 @@ function escapeHtml(str) {
 
 async function loadState() {
   return sendMessage({ type: 'GET_STATE' });
+}
+
+// ── Storage sync ──────────────────────────────────────────────────────────────
+
+/**
+ * Listen for storage changes on the given keys and invoke callback when any match.
+ * Simplifies the boilerplate in sites.js and settings.js.
+ */
+function onStorageChanged(keys, callback) {
+  chrome.storage.onChanged.addListener((changes) => {
+    if (keys.some((k) => k in changes)) callback();
+  });
 }
 
 // ── Sites rendering ───────────────────────────────────────────────────────────
@@ -90,7 +102,7 @@ function renderSites(state) {
   );
 }
 
-function initAddSite(state, onAdded) {
+function initAddSite(state) {
   const btn = document.getElementById('add-site-btn');
   if (!btn) return;
   btn.addEventListener('click', async () => {
@@ -111,8 +123,7 @@ function initAddSite(state, onAdded) {
     await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
     nameEl.value = '';
     patternEl.value = '';
-    if (onAdded) onAdded();
-    else renderSites(state);
+    renderSites(state);
   });
 }
 
@@ -120,7 +131,7 @@ function initAddSite(state, onAdded) {
 
 function renderSettings(state) {
   const minutes = (state.watchLimit || DEFAULT_WATCH_LIMIT_MS) / (60 * 1000);
-  const hours = (state.cooldownDuration || 3 * 60 * 60 * 1000) / (60 * 60 * 1000);
+  const hours = (state.cooldownDuration || DEFAULT_COOLDOWN_MS) / (60 * 60 * 1000);
   const wlEl = document.getElementById('watch-limit-minutes');
   const cdEl = document.getElementById('cooldown-hours');
   if (wlEl) wlEl.value = Math.round(minutes);

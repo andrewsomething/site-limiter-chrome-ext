@@ -1,5 +1,4 @@
-const DEFAULT_WATCH_LIMIT_MS = 15 * 60 * 1000;
-const DEFAULT_COOLDOWN_MS = 3 * 60 * 60 * 1000;
+const { DEFAULT_WATCH_LIMIT_MS, DEFAULT_COOLDOWN_MS } = require('./lib/utils.js');
 
 const DEFAULT_SITES = [
   {
@@ -155,7 +154,7 @@ const heartbeatQueues = new Map();
 
 function enqueueHeartbeat(siteId, sendResponse) {
   const prev = heartbeatQueues.get(siteId) ?? Promise.resolve();
-  const next = prev.then(() => handleHeartbeat(siteId, sendResponse)).catch(() => {});
+  const next = prev.then(() => handleHeartbeat(siteId, sendResponse)).catch(() => {}); // swallow — response already sent
   heartbeatQueues.set(siteId, next);
 }
 

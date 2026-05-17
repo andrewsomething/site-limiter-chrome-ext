@@ -112,6 +112,7 @@
         callback(response);
       });
     } catch (_) {
+      // Extension context invalidated (e.g. reloaded) — stop the heartbeat
       stopHeartbeat();
     }
   }

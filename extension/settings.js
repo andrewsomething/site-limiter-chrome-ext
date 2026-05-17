@@ -6,13 +6,9 @@ async function init() {
   initSettings(state);
 }
 
-chrome.storage.onChanged.addListener((changes) => {
-  if ('watchLimit' in changes || 'cooldownDuration' in changes) {
-    loadState().then((fresh) => {
-      state = fresh;
-      renderSettings(state);
-    });
-  }
+onStorageChanged(['watchLimit', 'cooldownDuration'], async () => {
+  state = await loadState();
+  renderSettings(state);
 });
 
 document.addEventListener('DOMContentLoaded', init);
