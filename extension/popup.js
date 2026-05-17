@@ -49,11 +49,20 @@ function renderStatus() {
         progressPct,
         extraHtml = '';
 
-      if (state.isPaused && !siteState.blockStartTime) {
+      if (state.isPaused) {
         badgeHtml = '<span class="badge paused">Paused</span>';
-        const watched = siteState.watchedTime || 0;
-        timeHtml = `${formatWatchTime(watched)} / ${limitLabel}`;
-        progressPct = Math.min(100, watchLimit > 0 ? (watched / watchLimit) * 100 : 0);
+        if (siteState.blockStartTime) {
+          // Freeze remaining cooldown at the moment pause was activated
+          const elapsedBeforePause = (state.pausedAt || Date.now()) - siteState.blockStartTime;
+          const frozenRemaining = Math.max(0, cooldownDuration - elapsedBeforePause);
+          timeHtml = `${limitLabel} / ${limitLabel}`;
+          progressPct = 100;
+          extraHtml = `<div class="cooldown-text">Available in (paused): ${formatCountdown(frozenRemaining)}</div>`;
+        } else {
+          const watched = siteState.watchedTime || 0;
+          timeHtml = `${formatWatchTime(watched)} / ${limitLabel}`;
+          progressPct = Math.min(100, watchLimit > 0 ? (watched / watchLimit) * 100 : 0);
+        }
       } else if (siteState.blockStartTime) {
         const remaining = cooldownDuration - (Date.now() - siteState.blockStartTime);
         if (remaining <= 0) {
@@ -148,6 +157,7 @@ function startPolling() {
     state.watchLimit = fresh.watchLimit;
     state.cooldownDuration = fresh.cooldownDuration;
     state.isPaused = fresh.isPaused;
+    state.pausedAt = fresh.pausedAt;
     renderStatus();
     renderPauseControls();
   }, 1000);

@@ -297,6 +297,7 @@ async function getState(sendResponse) {
     watchLimit: data.watchLimit || DEFAULT_WATCH_LIMIT_MS,
     cooldownDuration: data.cooldownDuration || DEFAULT_COOLDOWN_MS,
     isPaused: data.isPaused || false,
+    pausedAt: data.pausedAt || null,
   });
 }
 
