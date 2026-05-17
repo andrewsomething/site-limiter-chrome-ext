@@ -70,7 +70,7 @@ function matchSite(sites, hostname, pathname) {
   return null;
 }
 
-// Export for Node.js (tests and background.js) — no-op in browser context
+// Export for Node.js (tests) — no-op in browser context
 if (typeof module !== 'undefined') {
   module.exports = {
     DEFAULT_WATCH_LIMIT_MS,

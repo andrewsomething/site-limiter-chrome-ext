@@ -1,4 +1,6 @@
-const { DEFAULT_WATCH_LIMIT_MS, DEFAULT_COOLDOWN_MS } = require('./lib/utils.js');
+// Keep in sync with DEFAULT_WATCH_LIMIT_MS and DEFAULT_COOLDOWN_MS in lib/utils.js
+const DEFAULT_WATCH_LIMIT_MS = 15 * 60 * 1000;
+const DEFAULT_COOLDOWN_MS = 3 * 60 * 60 * 1000;
 
 const DEFAULT_SITES = [
   {
