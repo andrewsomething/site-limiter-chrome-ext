@@ -145,3 +145,17 @@ test('progress bar is 0% when watchedTime is 0 (no NaN)', async () => {
   expect(fill).not.toBeNull();
   expect(fill.style.width).toBe('0%');
 });
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+
+test('clicking a tab button activates that tab panel', async () => {
+  chrome.runtime.sendMessage.mockImplementation((_msg, cb) => cb(DEFAULT_STATE));
+  await triggerInit();
+
+  const sitesBtn = document.querySelector('.tab-btn[data-tab="sites"]');
+  sitesBtn.click();
+
+  expect(sitesBtn.classList.contains('active')).toBe(true);
+  expect(document.getElementById('tab-sites').classList.contains('active')).toBe(true);
+  expect(document.getElementById('tab-status').classList.contains('active')).toBe(false);
+});

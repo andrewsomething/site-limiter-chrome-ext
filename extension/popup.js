@@ -120,6 +120,7 @@ document.addEventListener(
   async () => {
     state = await loadState();
     if (!state) return; // background not ready yet; popup will retry via polling
+    initTabs();
     renderStatus();
     // Popup: enable/disable only — add/delete via Sites page
     renderSites(state);
