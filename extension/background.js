@@ -26,15 +26,8 @@ const DEFAULT_SITES = [
   },
   { id: 'tiktok', name: 'TikTok', patterns: ['tiktok.com/*'], enabled: false, isDefault: true },
   {
-    id: 'instagram-reels',
-    name: 'Instagram Reels',
-    patterns: ['instagram.com/reels/*'],
-    enabled: false,
-    isDefault: true,
-  },
-  {
     id: 'instagram',
-    name: 'Instagram (all)',
+    name: 'Instagram',
     patterns: ['instagram.com/*'],
     enabled: false,
     isDefault: true,
