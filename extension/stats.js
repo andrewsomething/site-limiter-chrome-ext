@@ -144,14 +144,15 @@ function makeChartOptions(yFormatter) {
 
 function updateOrCreateChart(chart, id, datasets, labels, yFormatter) {
   const canvas = document.getElementById(id);
-  const existing = chart || Chart.getChart(canvas);
-  if (existing) {
-    existing.data.labels = labels;
-    existing.data.datasets = datasets;
-    existing.options = makeChartOptions(yFormatter);
-    existing.update();
-    return existing;
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets = datasets;
+    chart.options = makeChartOptions(yFormatter);
+    chart.update();
+    return chart;
   }
+  // Destroy any stale chart on the canvas (e.g. after page reload)
+  Chart.getChart(canvas)?.destroy();
   return new Chart(canvas, {
     type: 'bar',
     data: { labels, datasets },
