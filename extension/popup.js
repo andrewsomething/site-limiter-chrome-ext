@@ -25,8 +25,6 @@ function initTabs() {
 function renderStatus() {
   const list = document.getElementById('status-list');
   const enabledSites = (state.sites || []).filter((s) => s.enabled);
-  const watchLimit = state.watchLimit || DEFAULT_WATCH_LIMIT_MS;
-  const limitLabel = formatWatchTime(watchLimit);
 
   if (enabledSites.length === 0) {
     list.innerHTML =
@@ -36,6 +34,12 @@ function renderStatus() {
 
   list.innerHTML = enabledSites
     .map((site) => {
+      // Use per-site override if set, otherwise fall back to global
+      const watchLimit = site.watchLimit || state.watchLimit || DEFAULT_WATCH_LIMIT_MS;
+      const cooldownDuration =
+        site.cooldownDuration || state.cooldownDuration || DEFAULT_COOLDOWN_MS;
+      const limitLabel = formatWatchTime(watchLimit);
+
       const siteState = (state.siteStates || {})[site.id] || {
         watchedTime: 0,
         blockStartTime: null,
@@ -46,7 +50,7 @@ function renderStatus() {
         extraHtml = '';
 
       if (siteState.blockStartTime) {
-        const remaining = (state.cooldownDuration || 0) - (Date.now() - siteState.blockStartTime);
+        const remaining = cooldownDuration - (Date.now() - siteState.blockStartTime);
         if (remaining <= 0) {
           badgeHtml = '<span class="badge ok">Active</span>';
           timeHtml = `0:00 / ${limitLabel}`;

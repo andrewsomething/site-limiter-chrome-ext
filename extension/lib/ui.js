@@ -43,6 +43,11 @@ function renderSiteGroup(containerId, sites, state, allowDelete = false) {
       '<div style="padding:8px 16px;color:#444;font-size:12px;">None added yet.</div>';
     return;
   }
+  const globalLimitMin = Math.round((state.watchLimit || DEFAULT_WATCH_LIMIT_MS) / (60 * 1000));
+  const globalCooldownHr = parseFloat(
+    ((state.cooldownDuration || DEFAULT_COOLDOWN_MS) / (60 * 60 * 1000)).toFixed(2)
+  );
+
   container.innerHTML = sites
     .map(
       (site) => `
@@ -55,14 +60,35 @@ function renderSiteGroup(containerId, sites, state, allowDelete = false) {
         <div class="site-toggle-name">${escapeHtml(site.name)}</div>
         <div class="pattern-hint">${site.patterns.map(escapeHtml).join(', ')}</div>
       </div>
+      <button class="limits-btn" data-id="${site.id}" title="Custom limits">⚙</button>
       ${allowDelete ? `<button class="delete-btn" data-id="${site.id}" title="Remove">✕</button>` : ''}
+    </div>
+    <div class="site-limits-panel" data-id="${site.id}">
+      <div class="site-limits-row">
+        <label>Watch limit</label>
+        <input type="number" class="limits-watch-min" data-id="${site.id}" min="1" step="1"
+          value="${site.watchLimit ? Math.round(site.watchLimit / 60000) : ''}"
+          placeholder="${globalLimitMin}" />
+        <span class="unit">min</span>
+      </div>
+      <div class="site-limits-row">
+        <label>Cooldown</label>
+        <input type="number" class="limits-cooldown-hr" data-id="${site.id}" min="0.1" step="0.5"
+          value="${site.cooldownDuration ? parseFloat((site.cooldownDuration / 3600000).toFixed(2)) : ''}"
+          placeholder="${globalCooldownHr}" />
+        <span class="unit">hr</span>
+      </div>
+      <div class="site-limits-actions">
+        <button class="btn btn-primary limits-save-btn" data-id="${site.id}">Save</button>
+        ${site.watchLimit || site.cooldownDuration ? `<button class="btn btn-ghost limits-clear-btn" data-id="${site.id}">Use default</button>` : ''}
+      </div>
     </div>`
     )
     .join('');
 
   container.querySelectorAll('.site-toggle-row').forEach((row) => {
     row.addEventListener('click', async (e) => {
-      if (e.target.closest('.delete-btn')) return;
+      if (e.target.closest('.delete-btn') || e.target.closest('.limits-btn')) return;
       const cb = row.querySelector('.site-enabled-cb');
       if (!e.target.closest('.toggle')) {
         cb.checked = !cb.checked;
@@ -70,6 +96,42 @@ function renderSiteGroup(containerId, sites, state, allowDelete = false) {
       const site = state.sites.find((s) => s.id === cb.dataset.id);
       if (site) site.enabled = cb.checked;
       await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
+    });
+  });
+
+  container.querySelectorAll('.limits-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const panel = container.querySelector(`.site-limits-panel[data-id="${btn.dataset.id}"]`);
+      if (panel) panel.classList.toggle('open');
+    });
+  });
+
+  container.querySelectorAll('.limits-save-btn').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const site = state.sites.find((s) => s.id === id);
+      if (!site) return;
+      const panel = container.querySelector(`.site-limits-panel[data-id="${id}"]`);
+      const rawMin = parseFloat(panel.querySelector('.limits-watch-min').value);
+      const rawHr = parseFloat(panel.querySelector('.limits-cooldown-hr').value);
+      site.watchLimit = rawMin > 0 ? Math.round(rawMin * 60 * 1000) : undefined;
+      site.cooldownDuration = rawHr > 0 ? Math.round(rawHr * 60 * 60 * 1000) : undefined;
+      await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
+      renderSites(state);
+    });
+  });
+
+  container.querySelectorAll('.limits-clear-btn').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const site = state.sites.find((s) => s.id === btn.dataset.id);
+      if (!site) return;
+      delete site.watchLimit;
+      delete site.cooldownDuration;
+      await sendMessage({ type: 'UPDATE_SITES', sites: state.sites });
+      renderSites(state);
     });
   });
 

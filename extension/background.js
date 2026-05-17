@@ -208,8 +208,11 @@ function getSiteState(siteStates, siteId) {
 async function handleHeartbeat(siteId, sendResponse) {
   const data = await storageGet();
   const now = Date.now();
-  const cooldownDuration = data.cooldownDuration || DEFAULT_COOLDOWN_MS;
-  const watchLimit = data.watchLimit || DEFAULT_WATCH_LIMIT_MS;
+  const sites = data.sites || DEFAULT_SITES;
+  const site = sites.find((s) => s.id === siteId);
+  const cooldownDuration =
+    (site && site.cooldownDuration) || data.cooldownDuration || DEFAULT_COOLDOWN_MS;
+  const watchLimit = (site && site.watchLimit) || data.watchLimit || DEFAULT_WATCH_LIMIT_MS;
   const siteStates = data.siteStates || {};
   const state = getSiteState(siteStates, siteId);
 
@@ -246,7 +249,10 @@ async function handleHeartbeat(siteId, sendResponse) {
 async function checkStatus(siteId, sendResponse) {
   const data = await storageGet();
   const now = Date.now();
-  const cooldownDuration = data.cooldownDuration || DEFAULT_COOLDOWN_MS;
+  const sites = data.sites || DEFAULT_SITES;
+  const site = sites.find((s) => s.id === siteId);
+  const cooldownDuration =
+    (site && site.cooldownDuration) || data.cooldownDuration || DEFAULT_COOLDOWN_MS;
   const siteStates = data.siteStates || {};
   const state = getSiteState(siteStates, siteId);
 
