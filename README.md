@@ -2,6 +2,8 @@
 
 A Chrome extension that limits how long you spend on distracting websites. After your watch limit is reached, the site is blocked for a configurable cooldown period.
 
+<img src="docs/screenshot.png" alt="Site Limiter popup — light mode" width="300" />&nbsp;&nbsp;&nbsp;<img src="docs/screenshot-dark.png" alt="Site Limiter popup — dark mode" width="300" />
+
 ## Features
 
 - **Per-site time limits** — track and enforce limits independently per site
